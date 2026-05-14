@@ -20,7 +20,7 @@ async function appendReceiptRow(receipt) {
     receipt.store_name || '',                    // C: ร้านค้า
     receipt.category || '',                      // D: หมวดหมู่
     JSON.stringify(receipt.items || []),         // E: รายการ
-    receipt.total_amount || '',                  // F: ยอดรวม
+    receipt.total_amount ?? '',                  // F: ยอดรวม
     receipt.line_display_name || '',             // G: ผู้ส่ง
     receipt.line_user_id                         // H: LINE User ID
   ];

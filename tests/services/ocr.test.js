@@ -1,11 +1,4 @@
-jest.mock('openai');
-jest.mock('../../src/config', () => ({ OPENAI_API_KEY: 'test-key' }));
-
-const OpenAI = require('openai');
 const mockCreate = jest.fn();
-OpenAI.mockImplementation(() => ({
-  chat: { completions: { create: mockCreate } }
-}));
 
 describe('extractReceiptData', () => {
   let ocr;

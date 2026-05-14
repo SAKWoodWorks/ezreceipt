@@ -99,11 +99,11 @@ function buildSuccessMessage(receipt) {
         layout: 'vertical',
         spacing: 'none',
         contents: [
-          buildRow('ร้านค้า', receipt.store_name),
-          buildRow('วันที่', receipt.date_on_receipt),
-          buildRow('หมวดหมู่', receipt.category),
+          buildRow('ร้านค้า', receipt.store_name || '-'),
+          buildRow('วันที่', receipt.date_on_receipt || '-'),
+          buildRow('หมวดหมู่', receipt.category || '-'),
           buildRow('ยอดรวม', total),
-          buildRow('บันทึกโดย', receipt.line_display_name)
+          buildRow('บันทึกโดย', receipt.line_display_name || '-')
         ]
       }
     }

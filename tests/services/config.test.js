@@ -4,8 +4,7 @@ describe('config', () => {
     'LINE_CHANNEL_ACCESS_TOKEN',
     'LINE_CHANNEL_SECRET',
     'OPENAI_API_KEY',
-    'SUPABASE_URL',
-    'SUPABASE_SERVICE_KEY',
+    'DATABASE_URL',
     'GOOGLE_SHEET_ID',
     'GOOGLE_SERVICE_ACCOUNT_JSON'
   ];
@@ -17,7 +16,7 @@ describe('config', () => {
     jest.resetModules();
     const config = require('../../src/config');
     expect(config.LINE_CHANNEL_ACCESS_TOKEN).toBe('test_LINE_CHANNEL_ACCESS_TOKEN');
-    expect(config.SUPABASE_URL).toBe('test_SUPABASE_URL');
+    expect(config.DATABASE_URL).toBe('test_DATABASE_URL');
   });
 
   it('throws if required env var is missing', () => {

@@ -2,24 +2,23 @@ jest.mock('../../src/config', () => ({
   LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
   LINE_CHANNEL_SECRET: 'test-secret',
   OPENAI_API_KEY: 'test-key',
-  SUPABASE_URL: 'https://test.supabase.co',
-  SUPABASE_SERVICE_KEY: 'test-key',
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
   GOOGLE_SHEET_ID: 'test-sheet-id',
   GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
   PORT: 3000
 }));
 jest.mock('../../src/services/line');
-jest.mock('../../src/services/supabase');
+jest.mock('../../src/services/db');
 jest.mock('../../src/services/sheets');
 
 const lineService = require('../../src/services/line');
-const supabase = require('../../src/services/supabase');
+const db = require('../../src/services/db');
 const sheets = require('../../src/services/sheets');
 
 lineService.replyMessage = jest.fn().mockResolvedValue({});
 lineService.buildSuccessMessage = jest.fn().mockReturnValue({ type: 'flex', altText: 'จดสำเร็จ', contents: {} });
-supabase.updateReceipt = jest.fn().mockResolvedValue();
-supabase.getReceiptById = jest.fn().mockResolvedValue({
+db.updateReceipt = jest.fn().mockResolvedValue();
+db.getReceiptById = jest.fn().mockResolvedValue({
   id: 'uuid-123',
   store_name: 'ร้านกาแฟ',
   date_on_receipt: '2026-05-14',
@@ -43,9 +42,9 @@ describe('handlePostback', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('updates receipt category and status in Supabase', async () => {
+  it('updates receipt category and status in DB', async () => {
     await handlePostback(confirmEvent);
-    expect(supabase.updateReceipt).toHaveBeenCalledWith('uuid-123', {
+    expect(db.updateReceipt).toHaveBeenCalledWith('uuid-123', {
       category: 'อาหาร/เครื่องดื่ม',
       status: 'confirmed'
     });
@@ -72,6 +71,6 @@ describe('handlePostback', () => {
       postback: { data: 'action=unknown' }
     };
     await handlePostback(unknownEvent);
-    expect(supabase.updateReceipt).not.toHaveBeenCalled();
+    expect(db.updateReceipt).not.toHaveBeenCalled();
   });
 });

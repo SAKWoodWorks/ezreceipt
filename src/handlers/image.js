@@ -1,7 +1,7 @@
 // src/handlers/image.js
 const { downloadImageBuffer, replyMessage, pushMessage, buildOcrResultMessage } = require('../services/line');
 const { extractReceiptData } = require('../services/ocr');
-const { insertReceipt } = require('../services/supabase');
+const { insertReceipt } = require('../services/db');
 
 async function handleImageMessage(event) {
   const { replyToken, source, message } = event;

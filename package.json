@@ -18,11 +18,11 @@
   "type": "commonjs",
   "dependencies": {
     "@line/bot-sdk": "^7.7.0",
-    "@supabase/supabase-js": "^2.105.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "googleapis": "^171.4.0",
-    "openai": "^6.37.0"
+    "openai": "^6.37.0",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "jest": "^30.4.2"

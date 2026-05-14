@@ -1,5 +1,5 @@
 const { replyMessage, buildSuccessMessage } = require('../services/line');
-const { updateReceipt, getReceiptById } = require('../services/supabase');
+const { updateReceipt, getReceiptById } = require('../services/db');
 const { appendReceiptRow } = require('../services/sheets');
 
 async function handlePostback(event) {

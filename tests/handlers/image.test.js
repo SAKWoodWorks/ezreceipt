@@ -2,19 +2,18 @@ jest.mock('../../src/config', () => ({
   LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
   LINE_CHANNEL_SECRET: 'test-secret',
   OPENAI_API_KEY: 'test-key',
-  SUPABASE_URL: 'https://test.supabase.co',
-  SUPABASE_SERVICE_KEY: 'test-key',
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
   GOOGLE_SHEET_ID: 'test-sheet-id',
   GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
   PORT: 3000
 }));
 jest.mock('../../src/services/line');
 jest.mock('../../src/services/ocr');
-jest.mock('../../src/services/supabase');
+jest.mock('../../src/services/db');
 
 const lineService = require('../../src/services/line');
 const ocr = require('../../src/services/ocr');
-const supabase = require('../../src/services/supabase');
+const db = require('../../src/services/db');
 
 lineService.downloadImageBuffer = jest.fn().mockResolvedValue(Buffer.from('img'));
 lineService.replyMessage = jest.fn().mockResolvedValue({});
@@ -29,7 +28,7 @@ ocr.extractReceiptData = jest.fn().mockResolvedValue({
   items: [{ name: 'กาแฟ', amount: 65 }]
 });
 
-supabase.insertReceipt = jest.fn().mockResolvedValue('receipt-uuid-123');
+db.insertReceipt = jest.fn().mockResolvedValue('receipt-uuid-123');
 
 describe('handleImageMessage', () => {
   const { handleImageMessage } = require('../../src/handlers/image');
@@ -50,7 +49,7 @@ describe('handleImageMessage', () => {
       category_suggestion: 'อาหาร/เครื่องดื่ม',
       items: []
     });
-    supabase.insertReceipt.mockResolvedValue('receipt-uuid-123');
+    db.insertReceipt.mockResolvedValue('receipt-uuid-123');
   });
 
   it('replies with processing message immediately', async () => {
@@ -67,9 +66,9 @@ describe('handleImageMessage', () => {
     expect(ocr.extractReceiptData).toHaveBeenCalledWith(Buffer.from('img'));
   });
 
-  it('inserts receipt to Supabase with pending status', async () => {
+  it('inserts receipt to DB with pending status', async () => {
     await handleImageMessage(event);
-    expect(supabase.insertReceipt).toHaveBeenCalledWith(
+    expect(db.insertReceipt).toHaveBeenCalledWith(
       expect.objectContaining({
         line_user_id: 'U123',
         group_id: 'C456',

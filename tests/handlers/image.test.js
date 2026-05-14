@@ -1,3 +1,13 @@
+jest.mock('../../src/config', () => ({
+  LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+  LINE_CHANNEL_SECRET: 'test-secret',
+  OPENAI_API_KEY: 'test-key',
+  SUPABASE_URL: 'https://test.supabase.co',
+  SUPABASE_SERVICE_KEY: 'test-key',
+  GOOGLE_SHEET_ID: 'test-sheet-id',
+  GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+  PORT: 3000
+}));
 jest.mock('../../src/services/line');
 jest.mock('../../src/services/ocr');
 jest.mock('../../src/services/supabase');

@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "directories": {
-    "doc": "docs",
-    "example": "example"
-  },
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
@@ -16,9 +12,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "type": "commonjs",
   "dependencies": {
-    "@line/bot-sdk": "^11.0.0",
+    "@line/bot-sdk": "^7.7.0",
     "@supabase/supabase-js": "^2.105.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

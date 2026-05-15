@@ -28,11 +28,25 @@ function resolveEditParams() {
   return null;
 }
 
+function showDebug(label, value) {
+  let dbg = document.getElementById('_debug');
+  if (!dbg) {
+    dbg = document.createElement('div');
+    dbg.id = '_debug';
+    dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ff0;color:#000;font-size:11px;padding:4px;z-index:9999;word-break:break-all';
+    document.body.prepend(dbg);
+  }
+  dbg.innerHTML += `<div><b>${label}:</b> ${value || '(empty)'}</div>`;
+}
+
 async function init() {
   // Capture URL params BEFORE liff.init() can modify window.location
+  showDebug('pre-init search', window.location.search);
   const preinitEdit = resolveEditParams();
+  showDebug('preinitEdit', JSON.stringify(preinitEdit));
 
   await liff.init({ liffId: window.LIFF_ID });
+  showDebug('post-init search', window.location.search);
   if (!liff.isLoggedIn()) { liff.login(); return; }
 
   const accessToken = liff.getAccessToken();

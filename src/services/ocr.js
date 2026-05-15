@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { GOOGLE_AI_API_KEY } = require('../config');
+const { GOOGLE_AI_API_KEY, OLLAMA_BASE_URL, OLLAMA_MODEL } = require('../config');
 
-const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
+const genAI = GOOGLE_AI_API_KEY ? new GoogleGenerativeAI(GOOGLE_AI_API_KEY) : null;
 
 const PROMPT = `You are a Thai receipt OCR assistant. Extract the following fields from this receipt image and return valid JSON only:
 
@@ -47,22 +47,41 @@ function parseOcrResponse(text) {
     } catch (_) {}
   }
 
-  const err = new Error('OcrParseError: could not parse Gemini response as JSON');
+  const err = new Error('OcrParseError: could not parse model response as JSON');
   err.name = 'OcrParseError';
   throw err;
 }
 
-async function extractReceiptData(imageBuffer) {
+async function extractWithOllama(imageBuffer) {
+  const base64 = imageBuffer.toString('base64');
+  const res = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      prompt: PROMPT,
+      images: [base64],
+      stream: false
+    })
+  });
+  if (!res.ok) throw new Error(`Ollama error: ${res.status} ${await res.text()}`);
+  const data = await res.json();
+  return parseOcrResponse(data.response);
+}
+
+async function extractWithGemini(imageBuffer) {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   const base64 = imageBuffer.toString('base64');
-
   const result = await model.generateContent([
     { text: PROMPT },
     { inlineData: { mimeType: 'image/jpeg', data: base64 } }
   ]);
+  return parseOcrResponse(result.response.text());
+}
 
-  const text = result.response.text();
-  return parseOcrResponse(text);
+async function extractReceiptData(imageBuffer) {
+  if (OLLAMA_BASE_URL) return extractWithOllama(imageBuffer);
+  return extractWithGemini(imageBuffer);
 }
 
 module.exports = { extractReceiptData };

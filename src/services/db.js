@@ -97,4 +97,21 @@ async function getUsers() {
   return rows;
 }
 
-module.exports = { insertReceipt, updateReceipt, getReceiptById, getReceipts, deleteReceipt, getStats, getUsers };
+async function getUserMonthlyStats(userId, month) {
+  const { rows } = await pool.query(
+    `SELECT category,
+            SUM(total_amount)::float AS total,
+            COUNT(*)::int AS count
+     FROM receipts
+     WHERE line_user_id = $1
+       AND to_char(date_on_receipt, 'YYYY-MM') = $2
+       AND status = 'confirmed'
+     GROUP BY category
+     ORDER BY total DESC`,
+    [userId, month]
+  );
+  const total = rows.reduce((sum, r) => sum + (r.total || 0), 0);
+  return { categories: rows, total };
+}
+
+module.exports = { insertReceipt, updateReceipt, getReceiptById, getReceipts, deleteReceipt, getStats, getUsers, getUserMonthlyStats };

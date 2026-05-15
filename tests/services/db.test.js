@@ -107,3 +107,27 @@ describe('getUsers', () => {
     expect(result).toEqual([{ line_user_id: 'U1', line_display_name: 'Alice' }]);
   });
 });
+
+describe('getUserMonthlyStats', () => {
+  it('returns categories array and summed total', async () => {
+    mockQuery.mockResolvedValue({
+      rows: [
+        { category: 'อาหาร/เครื่องดื่ม', total: 300, count: 3 },
+        { category: 'ค่าเดินทาง', total: 100, count: 1 }
+      ]
+    });
+    const result = await db.getUserMonthlyStats('U123', '2026-05');
+    expect(result.categories).toHaveLength(2);
+    expect(result.total).toBe(400);
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE line_user_id = $1'),
+      ['U123', '2026-05']
+    );
+  });
+
+  it('returns empty result when no confirmed receipts', async () => {
+    mockQuery.mockResolvedValue({ rows: [] });
+    const result = await db.getUserMonthlyStats('U123', '2026-01');
+    expect(result).toEqual({ categories: [], total: 0 });
+  });
+});

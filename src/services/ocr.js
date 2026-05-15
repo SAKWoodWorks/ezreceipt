@@ -39,7 +39,7 @@ function parseOcrResponse(text) {
 async function extractReceiptData(imageBuffer) {
   const base64 = imageBuffer.toString('base64');
   const response = await openai.chat.completions.create({
-    model: 'openrouter/free',
+    model: 'google/gemma-4-31b-it:free',
     messages: [{
       role: 'user',
       content: [

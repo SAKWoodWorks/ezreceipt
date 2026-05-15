@@ -35,23 +35,38 @@ describe('adminAuth middleware', () => {
   it('returns 401 when no cookie', () => {
     const req = { cookies: {} };
     const res = makeRes();
-    adminAuth(req, res, jest.fn());
+    const next = jest.fn();
+    adminAuth(req, res, next);
     expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 when cookies object is absent', () => {
+    const req = {};
+    const res = makeRes();
+    const next = jest.fn();
+    adminAuth(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('returns 401 with expired token', () => {
     const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '-1s' });
     const req = { cookies: { admin_token: token } };
     const res = makeRes();
-    adminAuth(req, res, jest.fn());
+    const next = jest.fn();
+    adminAuth(req, res, next);
     expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('returns 403 with non-admin role', () => {
     const token = jwt.sign({ role: 'user' }, JWT_SECRET);
     const req = { cookies: { admin_token: token } };
     const res = makeRes();
-    adminAuth(req, res, jest.fn());
+    const next = jest.fn();
+    adminAuth(req, res, next);
     expect(res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
   });
 });

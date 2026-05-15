@@ -77,10 +77,12 @@ async function initEditMode(receiptId) {
     }
   } catch (err) {
     msg.textContent = '❌ โหลดข้อมูลไม่สำเร็จ';
+    document.getElementById('edit-submit-btn').disabled = true;
   }
 }
 
 async function submitEdit() {
+  document.getElementById('edit-submit-btn').disabled = true;
   const msg = document.getElementById('edit-message');
   msg.textContent = 'กำลังบันทึก...';
 
@@ -105,13 +107,15 @@ async function submitEdit() {
     if (!res.ok) {
       const data = await res.json();
       msg.textContent = `❌ ${data.error || 'บันทึกไม่สำเร็จ'}`;
+      document.getElementById('edit-submit-btn').disabled = false;
       return;
     }
 
     msg.textContent = '✅ บันทึกสำเร็จ';
-    setTimeout(() => liff.closeWindow(), 2000);
+    setTimeout(() => { if (liff.isInClient()) liff.closeWindow(); }, 2000);
   } catch (err) {
     msg.textContent = '❌ เกิดข้อผิดพลาด กรุณาลองใหม่';
+    document.getElementById('edit-submit-btn').disabled = false;
   }
 }
 

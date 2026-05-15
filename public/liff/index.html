@@ -1,1 +1,42 @@
-<!DOCTYPE html><html><body><h1>LIFF App</h1></body></html>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ใบเสร็จของฉัน</title>
+  <link rel="stylesheet" href="/liff/style.css">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="/liff/config.js"></script>
+</head>
+<body>
+  <div class="header">
+    <h1>📄 ใบเสร็จของฉัน</h1>
+    <div class="user-name" id="user-name"></div>
+  </div>
+
+  <div class="filter-bar">
+    <select id="filter-month" onchange="loadReceipts()">
+      <option value="">ทุกเดือน</option>
+    </select>
+    <select id="filter-category" onchange="loadReceipts()">
+      <option value="">ทุกหมวดหมู่</option>
+      <option>อาหาร/เครื่องดื่ม</option>
+      <option>ค่าเดินทาง</option>
+      <option>สำนักงาน/อุปกรณ์</option>
+      <option>ค่าสาธารณูปโภค</option>
+      <option>ใบแจ้งหนี้/บิล</option>
+      <option>อื่นๆ</option>
+    </select>
+  </div>
+
+  <div class="receipt-list" id="receipt-list">
+    <div class="loading">กำลังโหลด...</div>
+  </div>
+
+  <div class="footer-bar">
+    ยอดรวม: <span id="footer-total">฿0</span>
+  </div>
+
+  <script src="/liff/app.js"></script>
+</body>
+</html>

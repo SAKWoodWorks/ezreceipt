@@ -1,5 +1,5 @@
 // src/handlers/image.js
-const { downloadImageBuffer, replyMessage, pushMessage, buildOcrResultMessage } = require('../services/line');
+const { downloadImageBuffer, replyMessage, pushMessage, buildOcrResultMessage, getUserDisplayName } = require('../services/line');
 const { extractReceiptData } = require('../services/ocr');
 const { insertReceipt } = require('../services/db');
 
@@ -18,8 +18,11 @@ async function handleImageMessage(event) {
     const imageBuffer = await downloadImageBuffer(message.id);
     const ocrData = await extractReceiptData(imageBuffer);
 
+    const displayName = await getUserDisplayName(userId, groupId);
+
     const receiptId = await insertReceipt({
       line_user_id: userId,
+      line_display_name: displayName,
       group_id: groupId,
       date_on_receipt: ocrData.date_on_receipt,
       store_name: ocrData.store_name,

@@ -134,11 +134,25 @@ async function pushMessage(userId, messages) {
   return client.pushMessage(userId, msgs);
 }
 
+async function getUserDisplayName(userId, groupId = null) {
+  try {
+    if (groupId) {
+      const profile = await client.getGroupMemberProfile(groupId, userId);
+      return profile.displayName;
+    }
+    const profile = await client.getProfile(userId);
+    return profile.displayName;
+  } catch {
+    return null;
+  }
+}
+
 module.exports = {
   buildOcrResultMessage,
   buildSuccessMessage,
   downloadImageBuffer,
   replyMessage,
   pushMessage,
+  getUserDisplayName,
   CATEGORIES
 };

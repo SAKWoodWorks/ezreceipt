@@ -51,6 +51,12 @@ async function extractReceiptData(imageBuffer) {
   });
 
   const content = response.choices[0].message.content;
+  console.log('OCR raw response:', JSON.stringify(response.choices[0].message));
+  if (!content) {
+    const err = new Error('OcrParseError: model returned null content');
+    err.name = 'OcrParseError';
+    throw err;
+  }
   return parseOcrResponse(content);
 }
 

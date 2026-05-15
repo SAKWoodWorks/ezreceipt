@@ -5,7 +5,7 @@ describe('extractReceiptData', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.mock('openai');
-    jest.mock('../../src/config', () => ({ OPENAI_API_KEY: 'test-key' }));
+    jest.mock('../../src/config', () => ({ OPENROUTER_API_KEY: 'test-key' }));
     const OpenAIInner = require('openai');
     OpenAIInner.mockImplementation(() => ({
       chat: { completions: { create: mockCreate } }

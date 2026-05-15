@@ -1,8 +1,11 @@
 // src/services/ocr.js
 const OpenAI = require('openai');
-const { OPENAI_API_KEY } = require('../config');
+const { OPENROUTER_API_KEY } = require('../config');
 
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: OPENROUTER_API_KEY,
+  baseURL: 'https://openrouter.ai/api/v1'
+});
 
 const PROMPT = `You are a Thai receipt OCR assistant. Extract the following fields from this receipt image and return valid JSON only:
 
@@ -36,7 +39,7 @@ function parseOcrResponse(text) {
 async function extractReceiptData(imageBuffer) {
   const base64 = imageBuffer.toString('base64');
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'google/gemini-2.0-flash-exp:free',
     messages: [{
       role: 'user',
       content: [

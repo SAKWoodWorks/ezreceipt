@@ -3,7 +3,7 @@ describe('config', () => {
   const REQUIRED = [
     'LINE_CHANNEL_ACCESS_TOKEN',
     'LINE_CHANNEL_SECRET',
-    'OPENROUTER_API_KEY',
+    'GOOGLE_AI_API_KEY',
     'DATABASE_URL',
     'GOOGLE_SHEET_ID',
     'GOOGLE_SERVICE_ACCOUNT_JSON'

@@ -1,11 +1,7 @@
-// src/services/ocr.js
-const OpenAI = require('openai');
-const { OPENROUTER_API_KEY } = require('../config');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GOOGLE_AI_API_KEY } = require('../config');
 
-const openai = new OpenAI({
-  apiKey: OPENROUTER_API_KEY,
-  baseURL: 'https://openrouter.ai/api/v1'
-});
+const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
 
 const PROMPT = `You are a Thai receipt OCR assistant. Extract the following fields from this receipt image and return valid JSON only:
 
@@ -17,9 +13,16 @@ const PROMPT = `You are a Thai receipt OCR assistant. Extract the following fiel
   "total_amount": number or null
 }
 
+For date_on_receipt: Thai receipts use Buddhist Era (BE). Convert to CE by subtracting 543. Example: 07/05/69 means BE 2569 = CE 2026-05-07.
 Return ONLY the JSON object. No explanation.`;
 
 function parseOcrResponse(text) {
+  if (!text) {
+    const err = new Error('OcrParseError: model returned empty content');
+    err.name = 'OcrParseError';
+    throw err;
+  }
+
   try {
     return JSON.parse(text.trim());
   } catch (_) {}
@@ -31,33 +34,22 @@ function parseOcrResponse(text) {
     } catch (_) {}
   }
 
-  const err = new Error('OcrParseError: could not parse GPT response as JSON');
+  const err = new Error('OcrParseError: could not parse Gemini response as JSON');
   err.name = 'OcrParseError';
   throw err;
 }
 
 async function extractReceiptData(imageBuffer) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   const base64 = imageBuffer.toString('base64');
-  const response = await openai.chat.completions.create({
-    model: 'google/gemma-4-26b-a4b-it:free',
-    messages: [{
-      role: 'user',
-      content: [
-        { type: 'text', text: PROMPT },
-        { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
-      ]
-    }],
-    max_tokens: 2000
-  });
 
-  const content = response.choices[0].message.content;
-  console.log('OCR raw response:', JSON.stringify(response.choices[0].message));
-  if (!content) {
-    const err = new Error('OcrParseError: model returned null content');
-    err.name = 'OcrParseError';
-    throw err;
-  }
-  return parseOcrResponse(content);
+  const result = await model.generateContent([
+    { text: PROMPT },
+    { inlineData: { mimeType: 'image/jpeg', data: base64 } }
+  ]);
+
+  const text = result.response.text();
+  return parseOcrResponse(text);
 }
 
 module.exports = { extractReceiptData };

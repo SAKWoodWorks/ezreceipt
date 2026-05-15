@@ -1,7 +1,7 @@
 jest.mock('../../src/config', () => ({
   LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
   LINE_CHANNEL_SECRET: 'test-secret',
-  OPENROUTER_API_KEY: 'test-key',
+  GOOGLE_AI_API_KEY: 'test-key',
   DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
   GOOGLE_SHEET_ID: 'test-sheet-id',
   GOOGLE_SERVICE_ACCOUNT_JSON: '{}',

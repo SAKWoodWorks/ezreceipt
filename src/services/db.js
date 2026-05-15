@@ -6,11 +6,12 @@ const pool = new Pool({ connectionString: DATABASE_URL });
 
 async function insertReceipt(data) {
   const { rows } = await pool.query(
-    `INSERT INTO receipts (line_user_id, group_id, date_on_receipt, store_name, items, total_amount, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO receipts (line_user_id, line_display_name, group_id, date_on_receipt, store_name, items, total_amount, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id`,
     [
       data.line_user_id,
+      data.line_display_name || null,
       data.group_id || null,
       data.date_on_receipt || null,
       data.store_name || null,

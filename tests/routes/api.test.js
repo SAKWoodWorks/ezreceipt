@@ -81,6 +81,14 @@ describe('DELETE /api/receipts/:id', () => {
     const res = await request(app).delete('/api/receipts/uuid-1');
     expect(res.status).toBe(401);
   });
+
+  it('returns 401 with LIFF Bearer token', async () => {
+    const app = makeApp();
+    const res = await request(app)
+      .delete('/api/receipts/uuid-1')
+      .set('Authorization', liffHeader());
+    expect(res.status).toBe(401);
+  });
 });
 
 describe('PUT /api/receipts/:id', () => {
@@ -118,5 +126,57 @@ describe('GET /api/export/csv', () => {
       .set('Cookie', adminCookie());
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('text/csv');
+  });
+});
+
+describe('GET /api/users', () => {
+  it('returns users for admin', async () => {
+    db.getUsers.mockResolvedValue([{ line_user_id: 'U1', line_display_name: 'Alice' }]);
+    const app = makeApp();
+    const res = await request(app)
+      .get('/api/users')
+      .set('Cookie', adminCookie());
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+  });
+
+  it('returns 401 without admin auth', async () => {
+    const app = makeApp();
+    const res = await request(app).get('/api/users');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('POST /api/liff/verify', () => {
+  afterEach(() => { delete global.fetch; });
+
+  it('returns 400 when accessToken is missing', async () => {
+    const app = makeApp();
+    const res = await request(app).post('/api/liff/verify').send({});
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 401 when LINE rejects the token', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
+    const app = makeApp();
+    const res = await request(app)
+      .post('/api/liff/verify')
+      .send({ accessToken: 'bad-line-token' });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns sessionToken when LINE accepts the token', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ userId: 'Uabc', displayName: 'Alice' })
+    });
+    const app = makeApp();
+    const res = await request(app)
+      .post('/api/liff/verify')
+      .send({ accessToken: 'valid-line-token' });
+    expect(res.status).toBe(200);
+    expect(res.body.userId).toBe('Uabc');
+    const decoded = jwt.verify(res.body.sessionToken, JWT_SECRET);
+    expect(decoded.userId).toBe('Uabc');
   });
 });

@@ -4,6 +4,7 @@ const { getUserMonthlyStats } = require('../services/db');
 async function handleTextMessage(event) {
   const { replyToken, source, message } = event;
   const userId = source.userId;
+  if (!userId) return;
   const text = message.text?.trim();
 
   if (text === 'เดือนนี้') {

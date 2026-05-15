@@ -63,7 +63,8 @@ router.put('/receipts/:id', receiptAuth, async (req, res) => {
       if (receipt.status !== 'pending') return res.status(403).json({ error: 'Receipt already confirmed' });
     }
     const { store_name, date_on_receipt, category, total_amount, status } = req.body;
-    await db.updateReceipt(req.params.id, { store_name, date_on_receipt, category, total_amount, status });
+    const resolvedStatus = req.liffUserId ? 'confirmed' : status;
+    await db.updateReceipt(req.params.id, { store_name, date_on_receipt, category, total_amount, status: resolvedStatus });
     res.json({ ok: true });
   } catch (err) {
     if (err.message.includes('Receipt not found')) return res.status(404).json({ error: err.message });

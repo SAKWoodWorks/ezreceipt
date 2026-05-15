@@ -39,7 +39,7 @@ function parseOcrResponse(text) {
 async function extractReceiptData(imageBuffer) {
   const base64 = imageBuffer.toString('base64');
   const response = await openai.chat.completions.create({
-    model: 'meta-llama/llama-3.2-11b-vision-instruct:free',
+    model: 'openrouter/free',
     messages: [{
       role: 'user',
       content: [

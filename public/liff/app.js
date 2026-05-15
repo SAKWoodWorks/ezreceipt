@@ -1,6 +1,7 @@
 let userId = null;
 let sessionToken = null;
 let allReceipts = [];
+let editReceiptId = null;
 
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -21,8 +22,97 @@ async function init() {
   sessionToken = data.sessionToken;
 
   document.getElementById('user-name').textContent = data.displayName || '';
-  populateMonthFilter();
-  await loadReceipts();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') === 'edit' && params.get('receipt_id')) {
+    await initEditMode(params.get('receipt_id'));
+  } else {
+    populateMonthFilter();
+    await loadReceipts();
+  }
+}
+
+async function initEditMode(receiptId) {
+  editReceiptId = receiptId;
+  document.querySelector('.filter-bar').style.display = 'none';
+  document.getElementById('receipt-list').style.display = 'none';
+  document.querySelector('.footer-bar').style.display = 'none';
+  document.getElementById('edit-view').style.display = 'block';
+
+  const msg = document.getElementById('edit-message');
+
+  try {
+    const res = await fetch(`/api/receipts/${receiptId}`, {
+      headers: { Authorization: `Bearer ${sessionToken}` }
+    });
+
+    if (res.status === 403) {
+      msg.textContent = '❌ ไม่มีสิทธิ์แก้ไขใบเสร็จนี้';
+      document.getElementById('edit-submit-btn').disabled = true;
+      return;
+    }
+    if (res.status === 404) {
+      msg.textContent = '❌ ไม่พบใบเสร็จ';
+      document.getElementById('edit-submit-btn').disabled = true;
+      return;
+    }
+
+    const receipt = await res.json();
+
+    if (receipt.status !== 'pending') {
+      msg.textContent = '✅ บันทึกแล้ว ไม่สามารถแก้ไขได้';
+      document.getElementById('edit-submit-btn').disabled = true;
+      return;
+    }
+
+    document.getElementById('edit-store').value = receipt.store_name || '';
+    document.getElementById('edit-date').value = receipt.date_on_receipt
+      ? String(receipt.date_on_receipt).slice(0, 10) : '';
+    document.getElementById('edit-total').value = receipt.total_amount || '';
+    const catSel = document.getElementById('edit-category');
+    if (receipt.category) {
+      for (const opt of catSel.options) {
+        if (opt.value === receipt.category) { opt.selected = true; break; }
+      }
+    }
+  } catch (err) {
+    msg.textContent = '❌ โหลดข้อมูลไม่สำเร็จ';
+  }
+}
+
+async function submitEdit() {
+  const msg = document.getElementById('edit-message');
+  msg.textContent = 'กำลังบันทึก...';
+
+  const body = {
+    store_name: document.getElementById('edit-store').value || null,
+    date_on_receipt: document.getElementById('edit-date').value || null,
+    total_amount: parseFloat(document.getElementById('edit-total').value) || null,
+    category: document.getElementById('edit-category').value,
+    status: 'confirmed'
+  };
+
+  try {
+    const res = await fetch(`/api/receipts/${editReceiptId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionToken}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      msg.textContent = `❌ ${data.error || 'บันทึกไม่สำเร็จ'}`;
+      return;
+    }
+
+    msg.textContent = '✅ บันทึกสำเร็จ';
+    setTimeout(() => liff.closeWindow(), 2000);
+  } catch (err) {
+    msg.textContent = '❌ เกิดข้อผิดพลาด กรุณาลองใหม่';
+  }
 }
 
 function populateMonthFilter() {

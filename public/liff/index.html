@@ -37,6 +37,40 @@
     ยอดรวม: <span id="footer-total">฿0</span>
   </div>
 
+  <div id="edit-view" style="display:none;padding:16px">
+    <h2 style="margin:0 0 16px;font-size:18px">✏️ แก้ไขใบเสร็จ</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <label style="font-size:14px;color:#555">ร้านค้า</label>
+      <input type="text" id="edit-store" placeholder="ชื่อร้าน"
+        style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:15px">
+
+      <label style="font-size:14px;color:#555">วันที่</label>
+      <input type="date" id="edit-date"
+        style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:15px">
+
+      <label style="font-size:14px;color:#555">ยอดรวม (฿)</label>
+      <input type="number" id="edit-total" step="0.01" placeholder="0.00"
+        style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:15px">
+
+      <label style="font-size:14px;color:#555">หมวดหมู่</label>
+      <select id="edit-category"
+        style="padding:10px;border:1px solid #ddd;border-radius:8px;font-size:15px">
+        <option>อาหาร/เครื่องดื่ม</option>
+        <option>ค่าเดินทาง</option>
+        <option>สำนักงาน/อุปกรณ์</option>
+        <option>ค่าสาธารณูปโภค</option>
+        <option>ใบแจ้งหนี้/บิล</option>
+        <option>อื่นๆ</option>
+      </select>
+
+      <button id="edit-submit-btn" onclick="submitEdit()"
+        style="margin-top:8px;padding:14px;background:#1E3A5F;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer">
+        ✅ ยืนยันและบันทึก
+      </button>
+      <div id="edit-message" style="text-align:center;font-size:14px;min-height:20px"></div>
+    </div>
+  </div>
+
   <script src="/liff/app.js"></script>
 </body>
 </html>

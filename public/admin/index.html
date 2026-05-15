@@ -1,1 +1,35 @@
-<!DOCTYPE html><html><body><h1>Admin Login</h1></body></html>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EzReceipt Admin</title>
+  <link rel="stylesheet" href="/admin/style.css">
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-box">
+      <h1>💼 EzReceipt Admin</h1>
+      <p>เข้าสู่ระบบสำหรับผู้ดูแล</p>
+      <input type="password" id="password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')login()">
+      <button onclick="login()">เข้าสู่ระบบ</button>
+      <div class="error-msg" id="error">รหัสผ่านไม่ถูกต้อง</div>
+    </div>
+  </div>
+  <script>
+    async function login() {
+      const password = document.getElementById('password').value;
+      const res = await fetch('/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.ok) {
+        window.location.href = '/admin/dashboard';
+      } else {
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

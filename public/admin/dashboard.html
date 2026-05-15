@@ -1,1 +1,93 @@
-<!DOCTYPE html><html><body><h1>Admin Dashboard</h1></body></html>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EzReceipt Admin</title>
+  <link rel="stylesheet" href="/admin/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar">
+    <div class="brand">💼 EzReceipt Admin</div>
+    <nav>
+      <a href="#" data-page="dashboard" onclick="showPage('dashboard')" class="active">📊 Dashboard</a>
+      <a href="#" data-page="receipts" onclick="showPage('receipts')">🧾 ใบเสร็จทั้งหมด</a>
+      <a href="#" data-page="export" onclick="showPage('export')">📥 Export</a>
+    </nav>
+    <button class="logout-btn" onclick="logout()">ออกจากระบบ</button>
+  </div>
+
+  <div class="main">
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <h2 class="page-title">📊 Dashboard</h2>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="label">ยอดรวมเดือนนี้</div><div class="value" id="stat-total">-</div></div>
+        <div class="stat-card"><div class="label">ใบเสร็จเดือนนี้</div><div class="value" id="stat-count">-</div></div>
+        <div class="stat-card"><div class="label">สมาชิกที่ส่ง</div><div class="value" id="stat-users">-</div></div>
+      </div>
+      <div class="charts">
+        <div class="chart-box"><h3>ยอดรายเดือน (6 เดือนล่าสุด)</h3><canvas id="barChart"></canvas></div>
+        <div class="chart-box"><h3>หมวดหมู่เดือนนี้</h3><canvas id="pieChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Receipts -->
+    <div class="page" id="page-receipts">
+      <h2 class="page-title">🧾 ใบเสร็จทั้งหมด</h2>
+      <div class="filters">
+        <input type="month" id="filter-month">
+        <select id="filter-category">
+          <option value="">ทุกหมวดหมู่</option>
+          <option>อาหาร/เครื่องดื่ม</option><option>ค่าเดินทาง</option>
+          <option>สำนักงาน/อุปกรณ์</option><option>ค่าสาธารณูปโภค</option>
+          <option>ใบแจ้งหนี้/บิล</option><option>อื่นๆ</option>
+        </select>
+        <select id="filter-user"><option value="">ทุกคน</option></select>
+        <button class="btn btn-primary" onclick="fetchReceipts()">ค้นหา</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>วันที่</th><th>ร้านค้า</th><th>หมวดหมู่</th><th>ยอด</th><th>ผู้ส่ง</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+          <tbody id="receipts-tbody"><tr><td colspan="7" style="text-align:center;padding:24px;color:#888">กำลังโหลด...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="page" id="page-export">
+      <h2 class="page-title">📥 Export CSV</h2>
+      <div style="background:white;border-radius:10px;padding:28px;max-width:480px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:4px">จากเดือน</label>
+        <input type="month" id="export-from" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:14px">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:4px">ถึงเดือน</label>
+        <input type="month" id="export-to" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:14px">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:4px">ผู้ส่ง</label>
+        <select id="export-user" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:20px"><option value="">ทุกคน</option></select>
+        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="downloadCsv()">⬇️ Download CSV</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h2>แก้ไขใบเสร็จ</h2>
+    <label>ร้านค้า</label><input type="text" id="edit-store">
+    <label>วันที่</label><input type="date" id="edit-date">
+    <label>หมวดหมู่</label><select id="edit-category"></select>
+    <label>ยอดรวม (฿)</label><input type="number" id="edit-total" step="0.01">
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('edit-modal').classList.remove('open')" style="background:#eee">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="/admin/app.js"></script>
+<script>showPage('dashboard');</script>
+</body>
+</html>

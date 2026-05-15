@@ -1,0 +1,62 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+
+/* Login */
+.login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.1); width: 360px; }
+.login-box h1 { font-size: 22px; margin-bottom: 8px; color: #1e3a5f; }
+.login-box p { color: #888; margin-bottom: 24px; font-size: 14px; }
+.login-box input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin-bottom: 12px; }
+.login-box button { width: 100%; padding: 11px; background: #1e3a5f; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; }
+.login-box button:hover { background: #2a5080; }
+.error-msg { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; }
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #2c3e50; color: white; padding: 20px 0; flex-shrink: 0; }
+.sidebar .brand { padding: 0 20px 20px; font-size: 17px; font-weight: bold; border-bottom: 1px solid #3d5166; }
+.sidebar nav a { display: block; padding: 12px 20px; color: #bdc3c7; text-decoration: none; font-size: 14px; transition: background 0.2s; }
+.sidebar nav a:hover, .sidebar nav a.active { background: #34495e; color: white; }
+.sidebar .logout-btn { display: block; margin: 20px; padding: 10px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; width: calc(100% - 40px); }
+.main { flex: 1; padding: 28px; overflow-y: auto; }
+
+/* Cards */
+.stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.stat-card .label { font-size: 13px; color: #888; margin-bottom: 8px; }
+.stat-card .value { font-size: 26px; font-weight: bold; color: #1e3a5f; }
+
+/* Charts */
+.charts { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-box { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.chart-box h3 { font-size: 14px; color: #555; margin-bottom: 16px; }
+
+/* Filters */
+.filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.filters select, .filters input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.btn-primary { background: #1e3a5f; color: white; }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-warning { background: #f39c12; color: white; }
+
+/* Table */
+.table-wrap { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { background: #f8f9fa; padding: 12px 14px; text-align: left; font-weight: 600; color: #555; border-bottom: 1px solid #eee; }
+td { padding: 11px 14px; border-bottom: 1px solid #f0f0f0; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfc; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: white; border-radius: 12px; padding: 28px; width: 440px; max-width: 95vw; }
+.modal h2 { margin-bottom: 18px; font-size: 18px; color: #1e3a5f; }
+.modal label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; margin-top: 12px; }
+.modal input, .modal select { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+/* Page sections */
+.page { display: none; }
+.page.active { display: block; }
+h2.page-title { font-size: 20px; color: #1e3a5f; margin-bottom: 20px; }

@@ -54,3 +54,33 @@ describe('extractReceiptData', () => {
     await expect(ocr.extractReceiptData(Buffer.from('img'))).rejects.toThrow('OcrParseError');
   });
 });
+
+describe('parseOcrResponse date sanitization', () => {
+  it('keeps valid CE date (2000-2100) unchanged', async () => {
+    const data = { date_on_receipt: '2025-05-14', store_name: 'Test', items: [], total_amount: 100, category_suggestion: 'อื่นๆ' };
+    mockGenerateContent.mockResolvedValue({ response: { text: () => JSON.stringify(data) } });
+    const result = await ocr.extractReceiptData(Buffer.from('img'));
+    expect(result.date_on_receipt).toBe('2025-05-14');
+  });
+
+  it('nullifies date when year is below 2000 (OCR misread BE year)', async () => {
+    const data = { date_on_receipt: '0193-05-14', store_name: 'Test', items: [], total_amount: 100, category_suggestion: 'อื่นๆ' };
+    mockGenerateContent.mockResolvedValue({ response: { text: () => JSON.stringify(data) } });
+    const result = await ocr.extractReceiptData(Buffer.from('img'));
+    expect(result.date_on_receipt).toBeNull();
+  });
+
+  it('nullifies date when year is above 2100 (unconverted BE year)', async () => {
+    const data = { date_on_receipt: '2568-05-14', store_name: 'Test', items: [], total_amount: 100, category_suggestion: 'อื่นๆ' };
+    mockGenerateContent.mockResolvedValue({ response: { text: () => JSON.stringify(data) } });
+    const result = await ocr.extractReceiptData(Buffer.from('img'));
+    expect(result.date_on_receipt).toBeNull();
+  });
+
+  it('keeps null date_on_receipt as null', async () => {
+    const data = { date_on_receipt: null, store_name: 'Test', items: [], total_amount: 100, category_suggestion: 'อื่นๆ' };
+    mockGenerateContent.mockResolvedValue({ response: { text: () => JSON.stringify(data) } });
+    const result = await ocr.extractReceiptData(Buffer.from('img'));
+    expect(result.date_on_receipt).toBeNull();
+  });
+});

@@ -7,7 +7,16 @@ jest.mock('@google/generative-ai', () => ({
     })
   }))
 }));
-jest.mock('../../src/config', () => ({ GOOGLE_AI_API_KEY: 'test-key' }));
+jest.mock('../../src/config', () => ({
+  GOOGLE_AI_API_KEY: 'test-key',
+  LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+  LINE_CHANNEL_SECRET: 'test-secret',
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  GOOGLE_SHEET_ID: 'test-sheet-id',
+  GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+  ADMIN_PASSWORD: 'test-admin-pass',
+  JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx'
+}));
 
 const ocr = require('../../src/services/ocr');
 

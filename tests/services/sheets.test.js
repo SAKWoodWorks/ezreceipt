@@ -6,7 +6,13 @@ jest.mock('../../src/config', () => ({
     project_id: 'test',
     private_key: 'fake-key',
     client_email: 'test@test.iam.gserviceaccount.com'
-  })
+  }),
+  LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+  LINE_CHANNEL_SECRET: 'test-secret',
+  GOOGLE_AI_API_KEY: 'test-key',
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  ADMIN_PASSWORD: 'test-admin-pass',
+  JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx'
 }));
 
 const { google } = require('googleapis');
@@ -28,7 +34,13 @@ describe('appendReceiptRow', () => {
     jest.mock('googleapis');
     jest.mock('../../src/config', () => ({
       GOOGLE_SHEET_ID: 'sheet-id-123',
-      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({ type: 'service_account', client_email: 'x@y.com', private_key: 'k' })
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({ type: 'service_account', client_email: 'x@y.com', private_key: 'k' }),
+      LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+      LINE_CHANNEL_SECRET: 'test-secret',
+      GOOGLE_AI_API_KEY: 'test-key',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      ADMIN_PASSWORD: 'test-admin-pass',
+      JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx'
     }));
     const { google: g } = require('googleapis');
     g.auth = { GoogleAuth: jest.fn().mockImplementation(() => ({})) };

@@ -6,7 +6,9 @@ describe('config', () => {
     'GOOGLE_AI_API_KEY',
     'DATABASE_URL',
     'GOOGLE_SHEET_ID',
-    'GOOGLE_SERVICE_ACCOUNT_JSON'
+    'GOOGLE_SERVICE_ACCOUNT_JSON',
+    'ADMIN_PASSWORD',
+    'JWT_SECRET'
   ];
 
   it('exports all required env vars', () => {

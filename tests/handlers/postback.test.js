@@ -5,6 +5,8 @@ jest.mock('../../src/config', () => ({
   DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
   GOOGLE_SHEET_ID: 'test-sheet-id',
   GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+  ADMIN_PASSWORD: 'test-admin-pass',
+  JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx',
   PORT: 3000
 }));
 jest.mock('../../src/services/line');

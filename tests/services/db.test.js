@@ -1,6 +1,15 @@
 // tests/services/db.test.js
 jest.mock('pg');
-jest.mock('../../src/config', () => ({ DATABASE_URL: 'postgresql://test:test@localhost:5432/test' }));
+jest.mock('../../src/config', () => ({
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+  LINE_CHANNEL_SECRET: 'test-secret',
+  GOOGLE_AI_API_KEY: 'test-key',
+  GOOGLE_SHEET_ID: 'test-sheet-id',
+  GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+  ADMIN_PASSWORD: 'test-admin-pass',
+  JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx'
+}));
 
 const { Pool } = require('pg');
 const mockQuery = jest.fn();
@@ -12,7 +21,16 @@ describe('db service', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.mock('pg');
-    jest.mock('../../src/config', () => ({ DATABASE_URL: 'postgresql://test:test@localhost:5432/test' }));
+    jest.mock('../../src/config', () => ({
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+  LINE_CHANNEL_SECRET: 'test-secret',
+  GOOGLE_AI_API_KEY: 'test-key',
+  GOOGLE_SHEET_ID: 'test-sheet-id',
+  GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+  ADMIN_PASSWORD: 'test-admin-pass',
+  JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx'
+}));
     const { Pool: P } = require('pg');
     P.mockImplementation(() => ({ query: mockQuery }));
     db = require('../../src/services/db');

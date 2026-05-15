@@ -1,6 +1,6 @@
 // src/services/line.js
 const line = require('@line/bot-sdk');
-const { LINE_CHANNEL_ACCESS_TOKEN, LINE_CHANNEL_SECRET } = require('../config');
+const { LINE_CHANNEL_ACCESS_TOKEN, LINE_CHANNEL_SECRET, LIFF_ID } = require('../config');
 
 const client = new line.Client({
   channelAccessToken: LINE_CHANNEL_ACCESS_TOKEN,
@@ -15,6 +15,17 @@ const CATEGORIES = [
   'ใบแจ้งหนี้/บิล',
   'อื่นๆ'
 ];
+
+const THAI_MONTHS = {
+  '01': 'ม.ค.', '02': 'ก.พ.', '03': 'มี.ค.', '04': 'เม.ย.',
+  '05': 'พ.ค.', '06': 'มิ.ย.', '07': 'ก.ค.', '08': 'ส.ค.',
+  '09': 'ก.ย.', '10': 'ต.ค.', '11': 'พ.ย.', '12': 'ธ.ค.'
+};
+
+function thaiMonthLabel(month) {
+  const [year, mm] = month.split('-');
+  return `${THAI_MONTHS[mm]} ${Number(year) + 543}`;
+}
 
 function buildRow(label, value) {
   return {
@@ -115,6 +126,57 @@ function buildSuccessMessage(receipt) {
   };
 }
 
+function buildMonthlySummaryMessage(stats, month) {
+  const { categories, total } = stats;
+  const label = thaiMonthLabel(month);
+  const liffUrl = LIFF_ID ? `https://liff.line.me/${LIFF_ID}` : '#';
+
+  const bodyContents = categories.length === 0
+    ? [{ type: 'text', text: 'ยังไม่มีค่าใช้จ่ายเดือนนี้', color: '#888888', size: 'sm', align: 'center' }]
+    : [
+        buildRow('ยอดรวมทั้งหมด', `฿${Number(total).toLocaleString('th-TH')}`),
+        { type: 'separator', margin: 'sm' },
+        ...categories.map(cat =>
+          buildRow(cat.category || 'อื่นๆ', `฿${Number(cat.total).toLocaleString('th-TH')} (${cat.count} ใบ)`)
+        )
+      ];
+
+  return {
+    type: 'flex',
+    altText: `สรุปค่าใช้จ่าย ${label}`,
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#1E3A5F',
+        paddingAll: 'lg',
+        contents: [
+          { type: 'text', text: `📊 สรุป ${label}`, color: '#ffffff', weight: 'bold', size: 'lg' }
+        ]
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'none',
+        contents: bodyContents
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'button',
+            action: { type: 'uri', label: 'ดูทั้งหมด', uri: liffUrl },
+            style: 'primary',
+            color: '#1E3A5F'
+          }
+        ]
+      }
+    }
+  };
+}
+
 async function downloadImageBuffer(messageId) {
   const stream = await client.getMessageContent(messageId);
   const chunks = [];
@@ -150,6 +212,7 @@ async function getUserDisplayName(userId, groupId = null) {
 module.exports = {
   buildOcrResultMessage,
   buildSuccessMessage,
+  buildMonthlySummaryMessage,
   downloadImageBuffer,
   replyMessage,
   pushMessage,

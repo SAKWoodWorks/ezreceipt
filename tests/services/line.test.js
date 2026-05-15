@@ -8,7 +8,8 @@ jest.mock('../../src/config', () => ({
   GOOGLE_SHEET_ID: 'test-sheet-id',
   GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
   ADMIN_PASSWORD: 'test-admin-pass',
-  JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx'
+  JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx',
+  LIFF_ID: 'test-liff-id'
 }));
 
 const line = require('@line/bot-sdk');
@@ -72,5 +73,38 @@ describe('downloadImageBuffer', () => {
     const buffer = await lineService.downloadImageBuffer('msg-id-123');
     expect(Buffer.isBuffer(buffer)).toBe(true);
     expect(buffer.toString()).toBe('fake-image-data');
+  });
+});
+
+describe('buildMonthlySummaryMessage', () => {
+  it('returns flex message with categories and total', () => {
+    const stats = {
+      categories: [
+        { category: 'อาหาร/เครื่องดื่ม', total: 300, count: 3 },
+        { category: 'ค่าเดินทาง', total: 100, count: 1 }
+      ],
+      total: 400
+    };
+    const msg = lineService.buildMonthlySummaryMessage(stats, '2026-05');
+    expect(msg.type).toBe('flex');
+    expect(msg.altText).toContain('พ.ค.');
+    expect(msg.altText).toContain('2569');
+    expect(msg.contents.header.contents[0].text).toContain('พ.ค. 2569');
+    expect(msg.contents.footer).toBeDefined();
+    expect(msg.contents.footer.contents[0].action.type).toBe('uri');
+  });
+
+  it('shows empty state message when no categories', () => {
+    const stats = { categories: [], total: 0 };
+    const msg = lineService.buildMonthlySummaryMessage(stats, '2026-01');
+    expect(msg.type).toBe('flex');
+    const bodyText = JSON.stringify(msg.contents.body);
+    expect(bodyText).toContain('ยังไม่มีค่าใช้จ่ายเดือนนี้');
+  });
+
+  it('formats Buddhist Era year correctly', () => {
+    const stats = { categories: [], total: 0 };
+    const msg = lineService.buildMonthlySummaryMessage(stats, '2025-12');
+    expect(msg.altText).toContain('ธ.ค. 2568');
   });
 });

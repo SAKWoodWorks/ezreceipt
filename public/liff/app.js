@@ -7,10 +7,30 @@ function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function resolveEditParams() {
+  // Check direct params (before or after liff.init may modify URL)
+  const cur = new URLSearchParams(window.location.search);
+  if (cur.get('mode') === 'edit' && cur.get('receipt_id')) {
+    return { mode: cur.get('mode'), receiptId: cur.get('receipt_id') };
+  }
+  // Fallback: decode from liff.state (login-redirect case)
+  const liffState = cur.get('liff.state');
+  if (liffState) {
+    try {
+      const decoded = decodeURIComponent(liffState);
+      const qs = decoded.includes('?') ? decoded.split('?')[1] : decoded.replace(/^[/?]+/, '');
+      const sp = new URLSearchParams(qs);
+      if (sp.get('mode') === 'edit' && sp.get('receipt_id')) {
+        return { mode: 'edit', receiptId: sp.get('receipt_id') };
+      }
+    } catch {}
+  }
+  return null;
+}
+
 async function init() {
-  // Capture liff.state before init() processes it (fallback for login-redirect case)
-  const preinitSearch = new URLSearchParams(window.location.search);
-  const liffState = preinitSearch.get('liff.state');
+  // Capture URL params BEFORE liff.init() can modify window.location
+  const preinitEdit = resolveEditParams();
 
   await liff.init({ liffId: window.LIFF_ID });
   if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -27,17 +47,11 @@ async function init() {
 
   document.getElementById('user-name').textContent = data.displayName || '';
 
-  let params = new URLSearchParams(window.location.search);
-  if (!params.get('mode') && liffState) {
-    try {
-      const decoded = decodeURIComponent(liffState);
-      const qs = decoded.includes('?') ? decoded.split('?')[1] : decoded.replace(/^\//, '');
-      params = new URLSearchParams(qs);
-    } catch {}
-  }
+  // Post-init check (SDK may restore URL via history.replaceState)
+  const editParams = preinitEdit || resolveEditParams();
 
-  if (params.get('mode') === 'edit' && params.get('receipt_id')) {
-    await initEditMode(params.get('receipt_id'));
+  if (editParams) {
+    await initEditMode(editParams.receiptId);
   } else {
     populateMonthFilter();
     await loadReceipts();

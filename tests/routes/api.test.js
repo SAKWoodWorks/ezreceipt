@@ -180,3 +180,101 @@ describe('POST /api/liff/verify', () => {
     expect(decoded.userId).toBe('Uabc');
   });
 });
+
+describe('GET /api/receipts/:id', () => {
+  const receipt = { id: 'uuid-1', line_user_id: 'U123', status: 'pending', store_name: 'Test', total_amount: 100 };
+
+  it('returns receipt for admin', async () => {
+    db.getReceiptById.mockResolvedValue(receipt);
+    const app = makeApp();
+    const res = await request(app)
+      .get('/api/receipts/uuid-1')
+      .set('Cookie', adminCookie());
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe('uuid-1');
+  });
+
+  it('returns own receipt for LIFF user', async () => {
+    db.getReceiptById.mockResolvedValue(receipt);
+    const app = makeApp();
+    const res = await request(app)
+      .get('/api/receipts/uuid-1')
+      .set('Authorization', liffHeader());
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe('uuid-1');
+  });
+
+  it('returns 403 when LIFF user requests another user receipt', async () => {
+    db.getReceiptById.mockResolvedValue({ ...receipt, line_user_id: 'OTHER' });
+    const app = makeApp();
+    const res = await request(app)
+      .get('/api/receipts/uuid-1')
+      .set('Authorization', liffHeader());
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 404 when receipt not found', async () => {
+    db.getReceiptById.mockRejectedValue(new Error('Receipt not found: uuid-1'));
+    const app = makeApp();
+    const res = await request(app)
+      .get('/api/receipts/uuid-1')
+      .set('Cookie', adminCookie());
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 401 without auth', async () => {
+    const app = makeApp();
+    const res = await request(app).get('/api/receipts/uuid-1');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('PUT /api/receipts/:id (LIFF auth)', () => {
+  const pendingReceipt = { id: 'uuid-1', line_user_id: 'U123', status: 'pending' };
+  const confirmedReceipt = { id: 'uuid-1', line_user_id: 'U123', status: 'confirmed' };
+
+  beforeEach(() => {
+    db.updateReceipt.mockResolvedValue();
+  });
+
+  it('allows LIFF user to update own pending receipt', async () => {
+    db.getReceiptById.mockResolvedValue(pendingReceipt);
+    const app = makeApp();
+    const res = await request(app)
+      .put('/api/receipts/uuid-1')
+      .set('Authorization', liffHeader())
+      .send({ store_name: 'Edited', category: 'อื่นๆ', status: 'confirmed' });
+    expect(res.status).toBe(200);
+    expect(db.updateReceipt).toHaveBeenCalledWith('uuid-1', expect.objectContaining({ store_name: 'Edited' }));
+  });
+
+  it('returns 403 when LIFF user tries to update confirmed receipt', async () => {
+    db.getReceiptById.mockResolvedValue(confirmedReceipt);
+    const app = makeApp();
+    const res = await request(app)
+      .put('/api/receipts/uuid-1')
+      .set('Authorization', liffHeader())
+      .send({ store_name: 'Edited' });
+    expect(res.status).toBe(403);
+    expect(db.updateReceipt).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when LIFF user tries to update another user receipt', async () => {
+    db.getReceiptById.mockResolvedValue({ ...pendingReceipt, line_user_id: 'OTHER' });
+    const app = makeApp();
+    const res = await request(app)
+      .put('/api/receipts/uuid-1')
+      .set('Authorization', liffHeader())
+      .send({ store_name: 'Edited' });
+    expect(res.status).toBe(403);
+  });
+
+  it('admin can still update any receipt without ownership check', async () => {
+    const app = makeApp();
+    const res = await request(app)
+      .put('/api/receipts/uuid-1')
+      .set('Cookie', adminCookie())
+      .send({ store_name: 'Admin Edit' });
+    expect(res.status).toBe(200);
+  });
+});

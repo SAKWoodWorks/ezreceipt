@@ -42,12 +42,31 @@ router.get('/receipts', receiptAuth, async (req, res) => {
   }
 });
 
-router.put('/receipts/:id', adminAuth, async (req, res) => {
+router.get('/receipts/:id', receiptAuth, async (req, res) => {
   try {
-    const { store_name, date_on_receipt, category, total_amount } = req.body;
-    await db.updateReceipt(req.params.id, { store_name, date_on_receipt, category, total_amount });
+    const receipt = await db.getReceiptById(req.params.id);
+    if (req.liffUserId && receipt.line_user_id !== req.liffUserId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    res.json(receipt);
+  } catch (err) {
+    if (err.message.includes('Receipt not found')) return res.status(404).json({ error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/receipts/:id', receiptAuth, async (req, res) => {
+  try {
+    if (req.liffUserId) {
+      const receipt = await db.getReceiptById(req.params.id);
+      if (receipt.line_user_id !== req.liffUserId) return res.status(403).json({ error: 'Forbidden' });
+      if (receipt.status !== 'pending') return res.status(403).json({ error: 'Receipt already confirmed' });
+    }
+    const { store_name, date_on_receipt, category, total_amount, status } = req.body;
+    await db.updateReceipt(req.params.id, { store_name, date_on_receipt, category, total_amount, status });
     res.json({ ok: true });
   } catch (err) {
+    if (err.message.includes('Receipt not found')) return res.status(404).json({ error: err.message });
     res.status(500).json({ error: err.message });
   }
 });

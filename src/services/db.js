@@ -60,8 +60,8 @@ async function deleteReceipt(id) {
 }
 
 async function getStats(months = 6) {
-  const startMonth = new Date();
-  startMonth.setMonth(startMonth.getMonth() - (months - 1));
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
   const startDate = `${startMonth.getFullYear()}-${String(startMonth.getMonth() + 1).padStart(2, '0')}-01`;
 
   const monthlyResult = await pool.query(

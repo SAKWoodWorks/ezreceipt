@@ -51,7 +51,7 @@ describe('getReceiptById', () => {
 });
 
 describe('getReceipts', () => {
-  it('returns confirmed receipts filtered by userId', async () => {
+  it('returns receipts filtered by userId', async () => {
     mockQuery.mockResolvedValue({ rows: [{ id: '1', store_name: 'Test' }] });
     const result = await db.getReceipts({ userId: 'U123', month: null, category: null });
     expect(result).toEqual([{ id: '1', store_name: 'Test' }]);
@@ -95,6 +95,8 @@ describe('getStats', () => {
     const result = await db.getStats(6);
     expect(result.monthly).toHaveLength(1);
     expect(result.categories).toHaveLength(1);
+    const [, params] = mockQuery.mock.calls[0];
+    expect(params[0]).toMatch(/^\d{4}-\d{2}-01$/);
   });
 });
 

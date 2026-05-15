@@ -23,8 +23,9 @@ const THAI_MONTHS = {
 };
 
 function thaiMonthLabel(month) {
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) return month || '';
   const [year, mm] = month.split('-');
-  return `${THAI_MONTHS[mm]} ${Number(year) + 543}`;
+  return `${THAI_MONTHS[mm] || mm} ${Number(year) + 543}`;
 }
 
 function buildRow(label, value) {
@@ -129,7 +130,6 @@ function buildSuccessMessage(receipt) {
 function buildMonthlySummaryMessage(stats, month) {
   const { categories, total } = stats;
   const label = thaiMonthLabel(month);
-  const liffUrl = LIFF_ID ? `https://liff.line.me/${LIFF_ID}` : '#';
 
   const bodyContents = categories.length === 0
     ? [{ type: 'text', text: 'ยังไม่มีค่าใช้จ่ายเดือนนี้', color: '#888888', size: 'sm', align: 'center' }]
@@ -140,6 +140,13 @@ function buildMonthlySummaryMessage(stats, month) {
           buildRow(cat.category || 'อื่นๆ', `฿${Number(cat.total).toLocaleString('th-TH')} (${cat.count} ใบ)`)
         )
       ];
+
+  const footerContents = LIFF_ID ? [{
+    type: 'button',
+    action: { type: 'uri', label: 'ดูทั้งหมด', uri: `https://liff.line.me/${LIFF_ID}` },
+    style: 'primary',
+    color: '#1E3A5F'
+  }] : [];
 
   return {
     type: 'flex',
@@ -161,18 +168,11 @@ function buildMonthlySummaryMessage(stats, month) {
         spacing: 'none',
         contents: bodyContents
       },
-      footer: {
+      footer: footerContents.length > 0 ? {
         type: 'box',
         layout: 'vertical',
-        contents: [
-          {
-            type: 'button',
-            action: { type: 'uri', label: 'ดูทั้งหมด', uri: liffUrl },
-            style: 'primary',
-            color: '#1E3A5F'
-          }
-        ]
-      }
+        contents: footerContents
+      } : undefined
     }
   };
 }

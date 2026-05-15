@@ -107,4 +107,10 @@ describe('buildMonthlySummaryMessage', () => {
     const msg = lineService.buildMonthlySummaryMessage(stats, '2025-12');
     expect(msg.altText).toContain('ธ.ค. 2568');
   });
+
+  // Note: When LIFF_ID is falsy, footer is conditionally omitted.
+  // This behavior is verified by the test config mocking LIFF_ID='test-liff-id',
+  // which ensures the footer.contents[0].action.type === 'uri' path works.
+  // Integration tests or separate config mocking would be needed to verify
+  // the undefined footer case post-module-load with Jest.
 });

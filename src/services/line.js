@@ -55,6 +55,11 @@ function buildOcrResultMessage(receiptId, ocrData) {
         contents: [
           buildRow('ร้านค้า', ocrData.store_name || 'ไม่พบข้อมูล'),
           buildRow('วันที่', ocrData.date_on_receipt || 'ไม่พบข้อมูล'),
+          ...(ocrData.items && ocrData.items.length > 0 ? [
+            { type: 'separator', margin: 'sm' },
+            ...ocrData.items.map(item => buildRow(item.name, `฿${Number(item.amount).toLocaleString('th-TH')}`)),
+            { type: 'separator', margin: 'sm' }
+          ] : []),
           buildRow('ยอดรวม', total),
           buildRow('AI แนะนำ', ocrData.category_suggestion || 'อื่นๆ')
         ]

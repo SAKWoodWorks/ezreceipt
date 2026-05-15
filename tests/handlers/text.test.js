@@ -54,4 +54,13 @@ describe('handleTextMessage', () => {
     expect(lineService.replyMessage).not.toHaveBeenCalled();
     expect(db.getUserMonthlyStats).not.toHaveBeenCalled();
   });
+
+  it('replies with error text when getUserMonthlyStats throws', async () => {
+    db.getUserMonthlyStats.mockRejectedValueOnce(new Error('DB error'));
+    await handleTextMessage(makeEvent('เดือนนี้'));
+    expect(lineService.replyMessage).toHaveBeenCalledWith(
+      'reply-token-xyz',
+      expect.objectContaining({ type: 'text', text: expect.stringContaining('❌') })
+    );
+  });
 });

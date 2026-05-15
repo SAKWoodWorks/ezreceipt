@@ -23,8 +23,9 @@ async function insertReceipt(data) {
 }
 
 async function updateReceipt(id, data) {
-  const keys = Object.keys(data);
-  const values = Object.values(data);
+  const filtered = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
+  const keys = Object.keys(filtered);
+  const values = Object.values(filtered);
   const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
   await pool.query(
     `UPDATE receipts SET ${setClause} WHERE id = $${keys.length + 1}`,
@@ -38,7 +39,7 @@ async function getReceiptById(id) {
   return rows[0];
 }
 
-async function getReceipts({ userId = null, month = null, category = null, from = null, to = null } = {}) {
+async function getReceipts({ userId = null, month = null, category = null, from = null, to = null, status = null } = {}) {
   const { rows } = await pool.query(
     `SELECT id, line_user_id, line_display_name, date_on_receipt,
             store_name, category, items, total_amount, status, created_at
@@ -48,8 +49,9 @@ async function getReceipts({ userId = null, month = null, category = null, from 
        AND ($3::text IS NULL OR category = $3)
        AND ($4::text IS NULL OR to_char(date_on_receipt, 'YYYY-MM') >= $4)
        AND ($5::text IS NULL OR to_char(date_on_receipt, 'YYYY-MM') <= $5)
+       AND ($6::text IS NULL OR status = $6)
      ORDER BY date_on_receipt DESC NULLS LAST, created_at DESC`,
-    [userId, month, category, from, to]
+    [userId, month, category, from, to, status]
   );
   return rows;
 }

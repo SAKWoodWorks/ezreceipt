@@ -66,7 +66,7 @@ describe('getReceipts', () => {
     await db.getReceipts({ userId: null, month: '2026-05', category: 'อาหาร/เครื่องดื่ม' });
     expect(mockQuery).toHaveBeenCalledWith(
       expect.any(String),
-      [null, '2026-05', 'อาหาร/เครื่องดื่ม', null, null]
+      [null, '2026-05', 'อาหาร/เครื่องดื่ม', null, null, null]
     );
   });
 });

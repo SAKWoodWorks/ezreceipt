@@ -2,6 +2,10 @@ let userId = null;
 let sessionToken = null;
 let allReceipts = [];
 
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 async function init() {
   await liff.init({ liffId: window.LIFF_ID });
   if (!liff.isLoggedIn()) { liff.login(); return; }
@@ -63,13 +67,13 @@ function renderReceipts() {
   list.innerHTML = allReceipts.map(r => `
     <div class="receipt-card">
       <div class="row">
-        <span class="store">${r.store_name || 'ไม่ระบุร้าน'}</span>
+        <span class="store">${esc(r.store_name || 'ไม่ระบุร้าน')}</span>
         <span class="amount">฿${Number(r.total_amount || 0).toLocaleString('th-TH')}</span>
       </div>
       <div class="meta">
-        ${r.date_on_receipt ? String(r.date_on_receipt).slice(0,10) : '-'}
+        ${esc(r.date_on_receipt ? String(r.date_on_receipt).slice(0,10) : '-')}
         &nbsp;·&nbsp;
-        <span class="category-badge">${r.category || 'ไม่ระบุ'}</span>
+        <span class="category-badge">${esc(r.category || 'ไม่ระบุ')}</span>
       </div>
     </div>
   `).join('');

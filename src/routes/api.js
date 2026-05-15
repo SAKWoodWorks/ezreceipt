@@ -29,8 +29,14 @@ function receiptAuth(req, res, next) {
 router.get('/receipts', receiptAuth, async (req, res) => {
   try {
     let { userId, month, category } = req.query;
-    if (req.liffUserId) userId = req.liffUserId;
-    res.json(await db.getReceipts({ userId: userId || null, month: month || null, category: category || null }));
+    const opts = { month: month || null, category: category || null };
+    if (req.liffUserId) {
+      opts.userId = req.liffUserId;
+      opts.status = 'confirmed';
+    } else {
+      opts.userId = userId || null;
+    }
+    res.json(await db.getReceipts(opts));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -56,8 +56,37 @@ describe('buildOcrResultMessage', () => {
     });
     const lastItem = msg.quickReply.items[6];
     expect(lastItem.action.type).toBe('uri');
-    expect(lastItem.action.uri).toContain('uuid-123');
+    expect(lastItem.action.uri).toContain('receipt_id=uuid-123');
     expect(lastItem.action.uri).toContain('mode=edit');
+  });
+
+  it('last quick reply uses fallback uri when LIFF_ID is empty', () => {
+    jest.resetModules();
+    jest.mock('../../src/config', () => ({
+      LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+      LINE_CHANNEL_SECRET: 'test-secret',
+      GOOGLE_AI_API_KEY: 'test-key',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      GOOGLE_SHEET_ID: 'test-sheet-id',
+      GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+      ADMIN_PASSWORD: 'test-admin-pass',
+      JWT_SECRET: 'test-secret-32-chars-xxxxxxxxxxxxxxxxx',
+      LIFF_ID: ''
+    }));
+    jest.mock('@line/bot-sdk');
+    const line2 = require('@line/bot-sdk');
+    line2.Client.mockImplementation(() => ({
+      replyMessage: jest.fn().mockResolvedValue({}),
+      pushMessage: jest.fn().mockResolvedValue({}),
+      getMessageContent: jest.fn()
+    }));
+    const lineService2 = require('../../src/services/line');
+    const msg = lineService2.buildOcrResultMessage('uuid-123', {
+      store_name: 'Test', date_on_receipt: '2026-05-14',
+      total_amount: 100, category_suggestion: 'อื่นๆ'
+    });
+    const lastItem = msg.quickReply.items[6];
+    expect(lastItem.action.uri).toMatch(/^#edit-uuid-123/);
   });
 });
 

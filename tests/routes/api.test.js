@@ -270,11 +270,14 @@ describe('PUT /api/receipts/:id (LIFF auth)', () => {
   });
 
   it('admin can still update any receipt without ownership check', async () => {
+    // Mock a confirmed receipt belonging to a different user — LIFF would reject this
+    db.getReceiptById.mockResolvedValue({ id: 'uuid-1', line_user_id: 'OTHER_USER', status: 'confirmed' });
     const app = makeApp();
     const res = await request(app)
       .put('/api/receipts/uuid-1')
       .set('Cookie', adminCookie())
       .send({ store_name: 'Admin Edit' });
     expect(res.status).toBe(200);
+    expect(db.updateReceipt).toHaveBeenCalledWith('uuid-1', expect.objectContaining({ store_name: 'Admin Edit' }));
   });
 });

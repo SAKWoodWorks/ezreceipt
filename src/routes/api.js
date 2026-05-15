@@ -4,6 +4,7 @@ const { JWT_SECRET } = require('../config');
 const db = require('../services/db');
 const { generateCsv } = require('../services/export');
 const adminAuth = require('../middleware/adminAuth');
+const { pushMessage, buildSuccessMessage } = require('../services/line');
 
 const router = express.Router();
 router.use(express.json());
@@ -65,6 +66,10 @@ router.put('/receipts/:id', receiptAuth, async (req, res) => {
     const { store_name, date_on_receipt, category, total_amount, status } = req.body;
     const resolvedStatus = req.liffUserId ? 'confirmed' : status;
     await db.updateReceipt(req.params.id, { store_name, date_on_receipt, category, total_amount, status: resolvedStatus });
+    if (req.liffUserId) {
+      const updated = await db.getReceiptById(req.params.id);
+      pushMessage(req.liffUserId, buildSuccessMessage(updated)).catch(() => {});
+    }
     res.json({ ok: true });
   } catch (err) {
     if (err.message.includes('Receipt not found')) return res.status(404).json({ error: err.message });

@@ -39,7 +39,7 @@ function parseOcrResponse(text) {
 async function extractReceiptData(imageBuffer) {
   const base64 = imageBuffer.toString('base64');
   const response = await openai.chat.completions.create({
-    model: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+    model: 'google/gemma-4-26b-a4b-it:free',
     messages: [{
       role: 'user',
       content: [
@@ -47,7 +47,7 @@ async function extractReceiptData(imageBuffer) {
         { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
       ]
     }],
-    max_tokens: 800
+    max_tokens: 2000
   });
 
   const content = response.choices[0].message.content;

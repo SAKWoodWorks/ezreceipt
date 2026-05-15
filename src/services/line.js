@@ -78,15 +78,27 @@ function buildOcrResultMessage(receiptId, ocrData) {
       }
     },
     quickReply: {
-      items: CATEGORIES.map(cat => ({
-        type: 'action',
-        action: {
-          type: 'postback',
-          label: cat,
-          data: `action=confirm&id=${receiptId}&category=${encodeURIComponent(cat)}`,
-          displayText: cat
+      items: [
+        ...CATEGORIES.map(cat => ({
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: cat,
+            data: `action=confirm&id=${receiptId}&category=${encodeURIComponent(cat)}`,
+            displayText: cat
+          }
+        })),
+        {
+          type: 'action',
+          action: {
+            type: 'uri',
+            label: '✏️ แก้ไขข้อมูล',
+            uri: LIFF_ID
+              ? `https://liff.line.me/${LIFF_ID}?receipt_id=${receiptId}&mode=edit`
+              : `#edit-${receiptId}`
+          }
         }
-      }))
+      ]
     }
   };
 }

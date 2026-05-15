@@ -34,7 +34,7 @@ describe('buildOcrResultMessage', () => {
       category_suggestion: 'อาหาร/เครื่องดื่ม'
     });
     expect(msg.type).toBe('flex');
-    expect(msg.quickReply.items).toHaveLength(6);
+    expect(msg.quickReply.items).toHaveLength(7);
     expect(msg.quickReply.items[0].action.data).toContain('uuid-123');
   });
 
@@ -47,6 +47,17 @@ describe('buildOcrResultMessage', () => {
     });
     expect(msg.type).toBe('flex');
     expect(msg.contents.body).toBeDefined();
+  });
+
+  it('last quick reply item is uri action to LIFF edit', () => {
+    const msg = lineService.buildOcrResultMessage('uuid-123', {
+      store_name: 'Test', date_on_receipt: '2026-05-14',
+      total_amount: 100, category_suggestion: 'อื่นๆ'
+    });
+    const lastItem = msg.quickReply.items[6];
+    expect(lastItem.action.type).toBe('uri');
+    expect(lastItem.action.uri).toContain('uuid-123');
+    expect(lastItem.action.uri).toContain('mode=edit');
   });
 });
 

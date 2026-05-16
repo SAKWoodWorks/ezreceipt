@@ -80,7 +80,11 @@ async function extractWithGemini(imageBuffer) {
 }
 
 async function extractReceiptData(imageBuffer) {
-  if (OLLAMA_BASE_URL) return extractWithOllama(imageBuffer);
+  if (OLLAMA_BASE_URL) {
+    console.log(`[OCR] using Ollama: ${OLLAMA_BASE_URL} model=${OLLAMA_MODEL}`);
+    return extractWithOllama(imageBuffer);
+  }
+  console.log('[OCR] using Gemini');
   return extractWithGemini(imageBuffer);
 }
 

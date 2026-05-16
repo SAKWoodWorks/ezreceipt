@@ -195,6 +195,7 @@ function renderReceipts() {
         &nbsp;·&nbsp;
         <span class="category-badge">${esc(r.category || 'ไม่ระบุ')}</span>
       </div>
+      ${r.image_url ? `<a href="${r.image_url}" target="_blank"><img src="${r.image_url}" style="width:100%;max-height:200px;object-fit:contain;border-radius:6px;margin-top:8px;display:block"></a>` : ''}
     </div>
   `).join('');
 }

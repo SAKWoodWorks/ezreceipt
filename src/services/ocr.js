@@ -66,6 +66,7 @@ async function extractWithOllama(imageBuffer) {
   });
   if (!res.ok) throw new Error(`Ollama error: ${res.status} ${await res.text()}`);
   const data = await res.json();
+  console.log('[OCR] Ollama raw response:', data.response?.slice(0, 500));
   return parseOcrResponse(data.response);
 }
 

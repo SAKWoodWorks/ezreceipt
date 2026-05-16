@@ -87,7 +87,7 @@ async function fetchReceipts() {
 function renderTable(receipts) {
   currentReceipts = receipts;
   const tbody = document.getElementById('receipts-tbody');
-  if (!receipts.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px">ไม่พบข้อมูล</td></tr>'; return; }
+  if (!receipts.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;padding:24px">ไม่พบข้อมูล</td></tr>'; return; }
   tbody.innerHTML = receipts.map((r, i) => `
     <tr>
       <td>${r.date_on_receipt ? String(r.date_on_receipt).slice(0,10) : '-'}</td>
@@ -96,6 +96,7 @@ function renderTable(receipts) {
       <td>฿${Number(r.total_amount || 0).toLocaleString('th-TH')}</td>
       <td>${r.line_display_name || '-'}</td>
       <td><span style="background:${r.status==='confirmed'?'#e8f5e9':'#fff3e0'};color:${r.status==='confirmed'?'#2e7d32':'#e65100'};padding:2px 8px;border-radius:4px;font-size:12px">${r.status}</span></td>
+      <td>${r.image_url ? `<a href="${r.image_url}" target="_blank"><img src="${r.image_url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px"></a>` : '-'}</td>
       <td>
         <button class="btn btn-warning" style="margin-right:4px;padding:5px 10px" data-idx="${i}" onclick="openEditByIdx(this.dataset.idx)">แก้ไข</button>
         <button class="btn btn-danger" style="padding:5px 10px" onclick="deleteReceipt('${r.id}')">ลบ</button>

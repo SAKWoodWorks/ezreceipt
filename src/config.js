@@ -30,8 +30,5 @@ module.exports = {
   OLLAMA_BASE_URL,
   OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'qwen2.5vl:7b',
   PORT: process.env.PORT || 3000,
-  R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID || '',
-  R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID || '',
-  R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY || '',
-  R2_BUCKET_NAME: process.env.R2_BUCKET_NAME || ''
+  GOOGLE_DRIVE_FOLDER_ID: process.env.GOOGLE_DRIVE_FOLDER_ID || ''
 };

@@ -88,6 +88,16 @@ describe('GET /api/receipts', () => {
     expect(res.body[0].image_url).toBeNull();
     expect(getSignedUrl).not.toHaveBeenCalled();
   });
+
+  it('sets image_url null when getSignedUrl throws in list', async () => {
+    getSignedUrl.mockRejectedValue(new Error('R2 unavailable'));
+    db.getReceipts.mockResolvedValue([{ id: '1', image_key: 'receipts/U1/1.jpg' }]);
+    const res = await request(makeApp())
+      .get('/api/receipts')
+      .set('Cookie', adminCookie());
+    expect(res.status).toBe(200);
+    expect(res.body[0].image_url).toBeNull();
+  });
 });
 
 describe('DELETE /api/receipts/:id', () => {
@@ -269,6 +279,16 @@ describe('GET /api/receipts/:id image_url', () => {
     db.getReceiptById.mockResolvedValue({ id: '2', image_key: null });
     const res = await request(makeApp())
       .get('/api/receipts/2')
+      .set('Cookie', adminCookie());
+    expect(res.status).toBe(200);
+    expect(res.body.image_url).toBeNull();
+  });
+
+  it('sets image_url null when getSignedUrl throws for single receipt', async () => {
+    getSignedUrl.mockRejectedValue(new Error('R2 unavailable'));
+    db.getReceiptById.mockResolvedValue({ id: '1', image_key: 'receipts/U1/1.jpg' });
+    const res = await request(makeApp())
+      .get('/api/receipts/1')
       .set('Cookie', adminCookie());
     expect(res.status).toBe(200);
     expect(res.body.image_url).toBeNull();

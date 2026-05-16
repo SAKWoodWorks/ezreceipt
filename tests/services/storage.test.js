@@ -1,3 +1,6 @@
+// jest.mock calls are hoisted to top of file by Jest's transform.
+// jest.resetModules() in beforeEach clears module registry so storage.js
+// is re-evaluated with the new config mock on each test — this ordering is intentional.
 jest.mock('@aws-sdk/client-s3');
 jest.mock('@aws-sdk/s3-request-presigner');
 
@@ -16,6 +19,11 @@ describe('storage — R2 configured', () => {
     mockSend = jest.fn().mockResolvedValue({});
     S3Client.mockImplementation(() => ({ send: mockSend }));
     ({ uploadImage, getSignedUrl } = require('../../src/services/storage'));
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('uploadImage calls PutObjectCommand with correct bucket, key, body', async () => {
@@ -28,7 +36,7 @@ describe('storage — R2 configured', () => {
       Body: buf,
       ContentType: 'image/jpeg'
     });
-    expect(mockSend).toHaveBeenCalled();
+    expect(mockSend).toHaveBeenCalledWith(expect.any(PutObjectCommand));
   });
 
   it('getSignedUrl calls aws getSignedUrl with correct expiry', async () => {
@@ -49,6 +57,7 @@ describe('storage — R2 configured', () => {
     awsSign.mockRejectedValue(new Error('network error'));
     const url = await getSignedUrl('receipts/U1/42.jpg', 3600);
     expect(url).toBeNull();
+    expect(console.error).toHaveBeenCalledWith('getSignedUrl error:', expect.any(Error));
   });
 });
 
@@ -64,6 +73,10 @@ describe('storage — R2 not configured', () => {
       R2_BUCKET_NAME: ''
     }));
     ({ uploadImage, getSignedUrl } = require('../../src/services/storage'));
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('uploadImage is a no-op', async () => {

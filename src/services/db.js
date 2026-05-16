@@ -43,7 +43,7 @@ async function getReceiptById(id) {
 async function getReceipts({ userId = null, month = null, category = null, from = null, to = null, status = null } = {}) {
   const { rows } = await pool.query(
     `SELECT id, line_user_id, line_display_name, date_on_receipt,
-            store_name, category, items, total_amount, status, created_at
+            store_name, category, items, total_amount, status, created_at, image_key
      FROM receipts
      WHERE ($1::text IS NULL OR line_user_id = $1)
        AND ($2::text IS NULL OR to_char(date_on_receipt, 'YYYY-MM') = $2)

@@ -61,7 +61,8 @@ async function extractWithOllama(imageBuffer) {
       model: OLLAMA_MODEL,
       prompt: PROMPT,
       images: [base64],
-      stream: false
+      stream: false,
+      format: 'json'
     })
   });
   if (!res.ok) throw new Error(`Ollama error: ${res.status} ${await res.text()}`);

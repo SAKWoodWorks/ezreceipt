@@ -36,7 +36,7 @@ async function handleImageMessage(event) {
     const imageKey = `receipts/${userId}/${receiptId}.jpg`;
     uploadImage(imageKey, imageBuffer)
       .then(() => updateReceipt(receiptId, { image_key: imageKey }))
-      .catch(err => console.error('image upload error:', err));
+      .catch(err => console.error(`image upload/update failed for receipt ${receiptId}:`, err));
 
     const resultMessage = buildOcrResultMessage(receiptId, ocrData);
     await pushMessage(userId, resultMessage);

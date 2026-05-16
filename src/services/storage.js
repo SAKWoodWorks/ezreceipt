@@ -4,12 +4,17 @@ const { GOOGLE_SERVICE_ACCOUNT_JSON, GOOGLE_DRIVE_FOLDER_ID } = require('../conf
 
 function getDriveClient() {
   if (!GOOGLE_DRIVE_FOLDER_ID) return null;
-  const credentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ['https://www.googleapis.com/auth/drive.file']
-  });
-  return google.drive({ version: 'v3', auth });
+  try {
+    const credentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/drive.file']
+    });
+    return google.drive({ version: 'v3', auth });
+  } catch (err) {
+    console.error('Drive client init failed:', err);
+    return null;
+  }
 }
 
 const drive = getDriveClient();

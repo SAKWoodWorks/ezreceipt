@@ -1,92 +1,92 @@
-// jest.mock calls are hoisted to top of file by Jest's transform.
-// jest.resetModules() in beforeEach clears module registry so storage.js
-// is re-evaluated with the new config mock on each test — this ordering is intentional.
-jest.mock('@aws-sdk/client-s3');
-jest.mock('@aws-sdk/s3-request-presigner');
+// jest.mock hoisted to top; jest.resetModules() in beforeEach forces storage.js
+// re-evaluation so the module-level drive client picks up the new config mock.
+jest.mock('googleapis');
 
-describe('storage — R2 configured', () => {
-  let uploadImage, getSignedUrl, mockSend;
+describe('storage — Drive configured', () => {
+  let uploadImage, getImageUrl;
+  let mockFilesCreate, mockPermCreate;
 
   beforeEach(() => {
     jest.resetModules();
     jest.mock('../../src/config', () => ({
-      R2_ACCOUNT_ID: 'acct-123',
-      R2_ACCESS_KEY_ID: 'key-id',
-      R2_SECRET_ACCESS_KEY: 'secret',
-      R2_BUCKET_NAME: 'test-bucket'
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({ type: 'service_account' }),
+      GOOGLE_DRIVE_FOLDER_ID: 'test-folder-id'
     }));
-    const { S3Client } = require('@aws-sdk/client-s3');
-    mockSend = jest.fn().mockResolvedValue({});
-    S3Client.mockImplementation(() => ({ send: mockSend }));
-    ({ uploadImage, getSignedUrl } = require('../../src/services/storage'));
+    const { google } = require('googleapis');
+    mockFilesCreate = jest.fn().mockResolvedValue({ data: { id: 'file-id-123' } });
+    mockPermCreate = jest.fn().mockResolvedValue({});
+    google.auth.GoogleAuth = jest.fn().mockImplementation(() => ({}));
+    google.drive = jest.fn().mockReturnValue({
+      files: { create: mockFilesCreate },
+      permissions: { create: mockPermCreate }
+    });
+    ({ uploadImage, getImageUrl } = require('../../src/services/storage'));
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  afterEach(() => jest.clearAllMocks());
 
-  it('uploadImage calls PutObjectCommand with correct bucket, key, body', async () => {
-    const { PutObjectCommand } = require('@aws-sdk/client-s3');
+  it('uploadImage calls drive.files.create with correct name and parent folder', async () => {
     const buf = Buffer.from('imgdata');
-    await uploadImage('receipts/U1/42.jpg', buf);
-    expect(PutObjectCommand).toHaveBeenCalledWith({
-      Bucket: 'test-bucket',
-      Key: 'receipts/U1/42.jpg',
-      Body: buf,
-      ContentType: 'image/jpeg'
+    const fileId = await uploadImage('U123_42.jpg', buf);
+    expect(mockFilesCreate).toHaveBeenCalledWith({
+      requestBody: { name: 'U123_42.jpg', parents: ['test-folder-id'] },
+      media: expect.objectContaining({ mimeType: 'image/jpeg' }),
+      fields: 'id'
     });
-    expect(mockSend).toHaveBeenCalledWith(expect.any(PutObjectCommand));
+    expect(fileId).toBe('file-id-123');
   });
 
-  it('getSignedUrl calls aws getSignedUrl with correct expiry', async () => {
-    const { getSignedUrl: awsSign } = require('@aws-sdk/s3-request-presigner');
-    const { GetObjectCommand } = require('@aws-sdk/client-s3');
-    awsSign.mockResolvedValue('https://r2.example.com/key?sig=abc');
-    const url = await getSignedUrl('receipts/U1/42.jpg', 3600);
-    expect(url).toBe('https://r2.example.com/key?sig=abc');
-    expect(awsSign).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.any(GetObjectCommand),
-      { expiresIn: 3600 }
+  it('uploadImage sets file permission to anyone reader', async () => {
+    await uploadImage('U123_42.jpg', Buffer.from('x'));
+    expect(mockPermCreate).toHaveBeenCalledWith({
+      fileId: 'file-id-123',
+      requestBody: { role: 'reader', type: 'anyone' }
+    });
+  });
+
+  it('uploadImage returns null on Drive API error', async () => {
+    mockFilesCreate.mockRejectedValue(new Error('Drive API error'));
+    const result = await uploadImage('U123_42.jpg', Buffer.from('x'));
+    expect(result).toBeNull();
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  it('getImageUrl returns correct Drive download URL', () => {
+    expect(getImageUrl('file-id-123')).toBe(
+      'https://drive.google.com/uc?id=file-id-123&export=download'
     );
   });
 
-  it('getSignedUrl returns null on error', async () => {
-    const { getSignedUrl: awsSign } = require('@aws-sdk/s3-request-presigner');
-    awsSign.mockRejectedValue(new Error('network error'));
-    const url = await getSignedUrl('receipts/U1/42.jpg', 3600);
-    expect(url).toBeNull();
-    expect(console.error).toHaveBeenCalledWith('getSignedUrl error:', expect.any(Error));
+  it('getImageUrl returns null for null fileId', () => {
+    expect(getImageUrl(null)).toBeNull();
   });
 });
 
-describe('storage — R2 not configured', () => {
-  let uploadImage, getSignedUrl;
+describe('storage — Drive not configured', () => {
+  let uploadImage, getImageUrl;
 
   beforeEach(() => {
     jest.resetModules();
     jest.mock('../../src/config', () => ({
-      R2_ACCOUNT_ID: '',
-      R2_ACCESS_KEY_ID: '',
-      R2_SECRET_ACCESS_KEY: '',
-      R2_BUCKET_NAME: ''
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({ type: 'service_account' }),
+      GOOGLE_DRIVE_FOLDER_ID: ''
     }));
-    ({ uploadImage, getSignedUrl } = require('../../src/services/storage'));
+    ({ uploadImage, getImageUrl } = require('../../src/services/storage'));
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  afterEach(() => jest.clearAllMocks());
+
+  it('uploadImage returns null when not configured', async () => {
+    const { google } = require('googleapis');
+    const result = await uploadImage('key.jpg', Buffer.from('x'));
+    expect(result).toBeNull();
+    expect(google.drive).not.toHaveBeenCalled();
   });
 
-  it('uploadImage is a no-op', async () => {
-    const { S3Client } = require('@aws-sdk/client-s3');
-    await expect(uploadImage('key', Buffer.from('x'))).resolves.toBeUndefined();
-    expect(S3Client).not.toHaveBeenCalled();
-  });
-
-  it('getSignedUrl returns null', async () => {
-    const url = await getSignedUrl('key', 3600);
-    expect(url).toBeNull();
+  it('getImageUrl still constructs URL when given a fileId', () => {
+    expect(getImageUrl('some-id')).toBe(
+      'https://drive.google.com/uc?id=some-id&export=download'
+    );
   });
 });

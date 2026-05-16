@@ -1,38 +1,47 @@
-const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl: awsGetSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = require('../config');
+const { google } = require('googleapis');
+const { Readable } = require('stream');
+const { GOOGLE_SERVICE_ACCOUNT_JSON, GOOGLE_DRIVE_FOLDER_ID } = require('../config');
 
-const client = R2_ACCOUNT_ID ? new S3Client({
-  region: 'auto',
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY
-  }
-}) : null;
-
-async function uploadImage(key, buffer) {
-  if (!client) return;
-  await client.send(new PutObjectCommand({
-    Bucket: R2_BUCKET_NAME,
-    Key: key,
-    Body: buffer,
-    ContentType: 'image/jpeg'
-  }));
+function getDriveClient() {
+  if (!GOOGLE_DRIVE_FOLDER_ID) return null;
+  const credentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/drive.file']
+  });
+  return google.drive({ version: 'v3', auth });
 }
 
-async function getSignedUrl(key, expirySeconds = 3600) {
-  if (!client) return null;
+const drive = getDriveClient();
+
+async function uploadImage(fileName, buffer) {
+  if (!drive) return null;
   try {
-    return await awsGetSignedUrl(
-      client,
-      new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }),
-      { expiresIn: expirySeconds }
-    );
+    const res = await drive.files.create({
+      requestBody: {
+        name: fileName,
+        parents: [GOOGLE_DRIVE_FOLDER_ID]
+      },
+      media: {
+        mimeType: 'image/jpeg',
+        body: Readable.from(buffer)
+      },
+      fields: 'id'
+    });
+    await drive.permissions.create({
+      fileId: res.data.id,
+      requestBody: { role: 'reader', type: 'anyone' }
+    });
+    return res.data.id;
   } catch (err) {
-    console.error('getSignedUrl error:', err);
+    console.error(`Drive upload failed for ${fileName}:`, err);
     return null;
   }
 }
 
-module.exports = { uploadImage, getSignedUrl };
+function getImageUrl(fileId) {
+  if (!fileId) return null;
+  return `https://drive.google.com/uc?id=${fileId}&export=download`;
+}
+
+module.exports = { uploadImage, getImageUrl };

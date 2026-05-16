@@ -56,7 +56,7 @@ describe('handleImageMessage', () => {
       items: []
     });
     db.insertReceipt.mockResolvedValue('receipt-uuid-123');
-    storage.uploadImage.mockResolvedValue(undefined);
+    storage.uploadImage.mockResolvedValue('drive-file-id-default');
     db.updateReceipt.mockResolvedValue(undefined);
   });
 
@@ -99,17 +99,28 @@ describe('handleImageMessage', () => {
     );
   });
 
-  it('uploads image to R2 with key receipts/{userId}/{receiptId}.jpg', async () => {
+  it('uploads image to Drive with filename {userId}_{receiptId}.jpg', async () => {
+    storage.uploadImage.mockResolvedValue('drive-file-id-456');
     await handleImageMessage(event);
-    await new Promise(resolve => setImmediate(resolve)); // flush async upload
+    await new Promise(resolve => setImmediate(resolve));
     expect(storage.uploadImage).toHaveBeenCalledWith(
-      'receipts/U123/receipt-uuid-123.jpg',
+      'U123_receipt-uuid-123.jpg',
       Buffer.from('img')
     );
   });
 
-  it('continues and pushes OCR result even if upload fails', async () => {
-    storage.uploadImage.mockRejectedValue(new Error('R2 down'));
+  it('stores Drive fileId in image_key when upload succeeds', async () => {
+    storage.uploadImage.mockResolvedValue('drive-file-id-456');
+    await handleImageMessage(event);
+    await new Promise(resolve => setImmediate(resolve));
+    expect(db.updateReceipt).toHaveBeenCalledWith(
+      'receipt-uuid-123',
+      { image_key: 'drive-file-id-456' }
+    );
+  });
+
+  it('skips updateReceipt when upload returns null', async () => {
+    storage.uploadImage.mockResolvedValue(null);
     await handleImageMessage(event);
     await new Promise(resolve => setImmediate(resolve));
     expect(lineService.pushMessage).toHaveBeenCalledWith('U123', expect.anything());

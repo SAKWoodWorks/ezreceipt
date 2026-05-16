@@ -33,9 +33,11 @@ async function handleImageMessage(event) {
     });
 
     // Upload image fire-and-forget — never block the LINE response
-    const imageKey = `receipts/${userId}/${receiptId}.jpg`;
-    uploadImage(imageKey, imageBuffer)
-      .then(() => updateReceipt(receiptId, { image_key: imageKey }))
+    const fileName = `${userId}_${receiptId}.jpg`;
+    uploadImage(fileName, imageBuffer)
+      .then(fileId => {
+        if (fileId) return updateReceipt(receiptId, { image_key: fileId });
+      })
       .catch(err => console.error(`image upload/update failed for receipt ${receiptId}:`, err));
 
     const resultMessage = buildOcrResultMessage(receiptId, ocrData);

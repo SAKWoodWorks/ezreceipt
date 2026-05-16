@@ -11,7 +11,7 @@ jest.mock('../../src/config', () => ({
 jest.mock('../../src/services/db');
 jest.mock('../../src/services/export');
 jest.mock('../../src/services/storage', () => ({
-  getSignedUrl: jest.fn().mockResolvedValue(null)
+  getImageUrl: jest.fn().mockReturnValue(null)
 }));
 
 const jwt = require('jsonwebtoken');
@@ -20,7 +20,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const db = require('../../src/services/db');
 const { generateCsv } = require('../../src/services/export');
-const { getSignedUrl } = require('../../src/services/storage');
+const { getImageUrl } = require('../../src/services/storage');
 
 const JWT_SECRET = 'test-secret-32-chars-xxxxxxxxxxxxxxxxx';
 
@@ -69,14 +69,14 @@ describe('GET /api/receipts', () => {
   });
 
   it('attaches image_url when receipt has image_key', async () => {
-    getSignedUrl.mockResolvedValue('https://r2.example.com/img.jpg?sig=x');
-    db.getReceipts.mockResolvedValue([{ id: '1', image_key: 'receipts/U1/1.jpg' }]);
+    getImageUrl.mockReturnValue('https://drive.google.com/uc?id=abc&export=download');
+    db.getReceipts.mockResolvedValue([{ id: '1', image_key: 'abc' }]);
     const res = await request(makeApp())
       .get('/api/receipts')
       .set('Cookie', adminCookie());
     expect(res.status).toBe(200);
-    expect(res.body[0].image_url).toBe('https://r2.example.com/img.jpg?sig=x');
-    expect(getSignedUrl).toHaveBeenCalledWith('receipts/U1/1.jpg', 3600);
+    expect(res.body[0].image_url).toBe('https://drive.google.com/uc?id=abc&export=download');
+    expect(getImageUrl).toHaveBeenCalledWith('abc');
   });
 
   it('sets image_url null for receipts with no image_key', async () => {
@@ -86,12 +86,12 @@ describe('GET /api/receipts', () => {
       .set('Cookie', adminCookie());
     expect(res.status).toBe(200);
     expect(res.body[0].image_url).toBeNull();
-    expect(getSignedUrl).not.toHaveBeenCalled();
+    expect(getImageUrl).not.toHaveBeenCalled();
   });
 
-  it('sets image_url null when getSignedUrl throws in list', async () => {
-    getSignedUrl.mockRejectedValue(new Error('R2 unavailable'));
-    db.getReceipts.mockResolvedValue([{ id: '1', image_key: 'receipts/U1/1.jpg' }]);
+  it('sets image_url null when getImageUrl returns null', async () => {
+    getImageUrl.mockReturnValue(null);
+    db.getReceipts.mockResolvedValue([{ id: '3', image_key: 'some-id' }]);
     const res = await request(makeApp())
       .get('/api/receipts')
       .set('Cookie', adminCookie());
@@ -266,29 +266,19 @@ describe('GET /api/receipts/:id', () => {
 
 describe('GET /api/receipts/:id image_url', () => {
   it('attaches image_url to single receipt', async () => {
-    getSignedUrl.mockResolvedValue('https://r2.example.com/img.jpg?sig=y');
-    db.getReceiptById.mockResolvedValue({ id: '1', image_key: 'receipts/U1/1.jpg' });
+    getImageUrl.mockReturnValue('https://drive.google.com/uc?id=xyz&export=download');
+    db.getReceiptById.mockResolvedValue({ id: '1', image_key: 'xyz' });
     const res = await request(makeApp())
       .get('/api/receipts/1')
       .set('Cookie', adminCookie());
     expect(res.status).toBe(200);
-    expect(res.body.image_url).toBe('https://r2.example.com/img.jpg?sig=y');
+    expect(res.body.image_url).toBe('https://drive.google.com/uc?id=xyz&export=download');
   });
 
   it('sets image_url null when no image_key', async () => {
     db.getReceiptById.mockResolvedValue({ id: '2', image_key: null });
     const res = await request(makeApp())
       .get('/api/receipts/2')
-      .set('Cookie', adminCookie());
-    expect(res.status).toBe(200);
-    expect(res.body.image_url).toBeNull();
-  });
-
-  it('sets image_url null when getSignedUrl throws for single receipt', async () => {
-    getSignedUrl.mockRejectedValue(new Error('R2 unavailable'));
-    db.getReceiptById.mockResolvedValue({ id: '1', image_key: 'receipts/U1/1.jpg' });
-    const res = await request(makeApp())
-      .get('/api/receipts/1')
       .set('Cookie', adminCookie());
     expect(res.status).toBe(200);
     expect(res.body.image_url).toBeNull();

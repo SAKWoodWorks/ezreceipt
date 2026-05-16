@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config');
 const db = require('../services/db');
 const { generateCsv } = require('../services/export');
-const { getSignedUrl } = require('../services/storage');
+const { getImageUrl } = require('../services/storage');
 const adminAuth = require('../middleware/adminAuth');
 const { pushMessage, buildSuccessMessage } = require('../services/line');
 
@@ -28,11 +28,10 @@ function receiptAuth(req, res, next) {
   return res.status(401).json({ error: 'Unauthorized' });
 }
 
-async function addImageUrls(receipts) {
-  return Promise.all(receipts.map(async r => {
-    if (!r.image_key) return { ...r, image_url: null };
-    const url = await getSignedUrl(r.image_key, 3600).catch(() => null);
-    return { ...r, image_url: url };
+function addImageUrls(receipts) {
+  return receipts.map(r => ({
+    ...r,
+    image_url: r.image_key ? getImageUrl(r.image_key) : null
   }));
 }
 
@@ -47,7 +46,7 @@ router.get('/receipts', receiptAuth, async (req, res) => {
       opts.userId = userId || null;
     }
     const receipts = await db.getReceipts(opts);
-    res.json(await addImageUrls(receipts));
+    res.json(addImageUrls(receipts));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -59,7 +58,7 @@ router.get('/receipts/:id', receiptAuth, async (req, res) => {
     if (req.liffUserId && receipt.line_user_id !== req.liffUserId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    const [withUrl] = await addImageUrls([receipt]);
+    const [withUrl] = addImageUrls([receipt]);
     res.json(withUrl);
   } catch (err) {
     if (err.message.includes('Receipt not found')) return res.status(404).json({ error: err.message });

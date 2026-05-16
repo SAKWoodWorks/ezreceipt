@@ -23,6 +23,7 @@ async function uploadImage(fileName, buffer) {
   if (!drive) return null;
   try {
     const res = await drive.files.create({
+      supportsAllDrives: true,
       requestBody: {
         name: fileName,
         parents: [GOOGLE_DRIVE_FOLDER_ID]
@@ -35,6 +36,7 @@ async function uploadImage(fileName, buffer) {
     });
     await drive.permissions.create({
       fileId: res.data.id,
+      supportsAllDrives: true,
       requestBody: { role: 'reader', type: 'anyone' }
     });
     return res.data.id;

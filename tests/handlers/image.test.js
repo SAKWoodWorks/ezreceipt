@@ -12,6 +12,7 @@ jest.mock('../../src/config', () => ({
 jest.mock('../../src/services/line');
 jest.mock('../../src/services/ocr');
 jest.mock('../../src/services/db');
+jest.mock('../../src/services/storage');
 
 const lineService = require('../../src/services/line');
 const ocr = require('../../src/services/ocr');
@@ -31,6 +32,9 @@ ocr.extractReceiptData = jest.fn().mockResolvedValue({
 });
 
 db.insertReceipt = jest.fn().mockResolvedValue('receipt-uuid-123');
+const storage = require('../../src/services/storage');
+storage.uploadImage = jest.fn().mockResolvedValue(undefined);
+db.updateReceipt = jest.fn().mockResolvedValue(undefined);
 
 describe('handleImageMessage', () => {
   const { handleImageMessage } = require('../../src/handlers/image');
@@ -52,6 +56,8 @@ describe('handleImageMessage', () => {
       items: []
     });
     db.insertReceipt.mockResolvedValue('receipt-uuid-123');
+    storage.uploadImage.mockResolvedValue(undefined);
+    db.updateReceipt.mockResolvedValue(undefined);
   });
 
   it('replies with processing message immediately', async () => {
@@ -91,5 +97,22 @@ describe('handleImageMessage', () => {
       'U123',
       expect.objectContaining({ text: expect.stringContaining('อ่านใบเสร็จไม่สำเร็จ') })
     );
+  });
+
+  it('uploads image to R2 with key receipts/{userId}/{receiptId}.jpg', async () => {
+    await handleImageMessage(event);
+    await new Promise(resolve => setImmediate(resolve)); // flush async upload
+    expect(storage.uploadImage).toHaveBeenCalledWith(
+      'receipts/U123/receipt-uuid-123.jpg',
+      Buffer.from('img')
+    );
+  });
+
+  it('continues and pushes OCR result even if upload fails', async () => {
+    storage.uploadImage.mockRejectedValue(new Error('R2 down'));
+    await handleImageMessage(event);
+    await new Promise(resolve => setImmediate(resolve));
+    expect(lineService.pushMessage).toHaveBeenCalledWith('U123', expect.anything());
+    expect(db.updateReceipt).not.toHaveBeenCalled();
   });
 });

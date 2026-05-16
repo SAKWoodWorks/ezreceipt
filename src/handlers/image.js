@@ -1,7 +1,8 @@
 // src/handlers/image.js
 const { downloadImageBuffer, replyMessage, pushMessage, buildOcrResultMessage, getUserDisplayName } = require('../services/line');
 const { extractReceiptData } = require('../services/ocr');
-const { insertReceipt } = require('../services/db');
+const { insertReceipt, updateReceipt } = require('../services/db');
+const { uploadImage } = require('../services/storage');
 
 async function handleImageMessage(event) {
   const { replyToken, source, message } = event;
@@ -30,6 +31,12 @@ async function handleImageMessage(event) {
       total_amount: ocrData.total_amount,
       status: 'pending'
     });
+
+    // Upload image fire-and-forget — never block the LINE response
+    const imageKey = `receipts/${userId}/${receiptId}.jpg`;
+    uploadImage(imageKey, imageBuffer)
+      .then(() => updateReceipt(receiptId, { image_key: imageKey }))
+      .catch(err => console.error('image upload error:', err));
 
     const resultMessage = buildOcrResultMessage(receiptId, ocrData);
     await pushMessage(userId, resultMessage);
